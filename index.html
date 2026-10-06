@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IAP Builder</title>
+<style>
+:root{--bg:#f3f5f8;--panel:#fff;--ink:#1b2430;--mut:#667085;--line:#d5dce6;--acc:#1f4e8c;--accink:#fff;--ok:#1a7f4b;--warn:#b54708;--bad:#b42318;--inp:#fff;--soft:#eaf0f8}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141b;--panel:#18202b;--ink:#e6ebf2;--mut:#93a1b5;--line:#2b3646;--acc:#5b9bff;--accink:#0b1220;--ok:#4cc38a;--warn:#f0a050;--bad:#ff8a80;--inp:#111821;--soft:#1d2836}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{background:var(--inp);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+button.danger{color:var(--bad)}
+button.ghost{background:none}
+#app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+#side{background:var(--panel);border-right:1px solid var(--line);padding:14px;position:sticky;top:0;height:100vh;overflow:auto}
+#main{padding:0 22px 60px;min-width:0}
+.brand{font-weight:700;font-size:18px;margin-bottom:12px}.brand small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+.blk{margin-bottom:14px}.lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;display:block;margin:10px 0 4px}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.row.end{justify-content:flex-end}
+.nav{display:flex;width:100%;text-align:left;align-items:center;gap:8px;border:0;background:none;padding:7px 8px;border-radius:6px;min-height:34px}
+.nav:hover{background:var(--soft)}.nav.on{background:var(--soft);font-weight:600;box-shadow:inset 3px 0 var(--acc)}
+.nav span{color:var(--mut);font-size:12px;margin-left:auto;text-align:right}
+.nav.sub{padding-left:34px;font-size:13px}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mut);flex:none}
+.dot.part{background:var(--ok);border-color:var(--ok)}.dot.auto{border-color:var(--acc);background:var(--acc)}
+.top{position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
+.top .grow{flex:1;min-width:200px}
+.pill{padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--soft)}
+.pill.ok{color:var(--ok)}.pill.warn{color:var(--warn)}
+h2{margin:6px 0 2px;font-size:22px}.mut{color:var(--mut)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.f{display:block;margin-bottom:12px}.f>span,.cap{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.tw{overflow-x:auto;margin-bottom:8px}
+table.et{border-collapse:collapse;width:100%;min-width:560px}
+table.et th{font-size:12px;text-align:left;color:var(--mut);padding:4px;white-space:nowrap}
+table.et td{padding:3px}table.et td input,table.et td select{min-width:90px}
+.ask{border:1px solid var(--line);border-left:4px solid var(--acc);background:var(--panel);border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.ask.bad{border-left-color:var(--warn)}.ask b.w{color:var(--warn)}
+.alert{border:1px solid var(--warn);border-radius:8px;padding:10px 14px;margin-bottom:14px;background:var(--panel)}
+.alert ul{margin:6px 0 0 18px;padding:0}
+.rg{display:grid;grid-template-columns:minmax(150px,1.2fr) 130px 1.2fr 1fr 1fr;gap:6px;align-items:center;margin-bottom:6px}
+.rg.h{font-size:12px;color:var(--mut)}
+.rg .pos{font-size:14px}.rg .pos.coml{font-weight:700;color:var(--acc)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.chips button.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.chk{display:flex;gap:8px;align-items:center;margin:4px 0}.chk input{width:auto}
+.log .e{display:grid;grid-template-columns:200px 1fr auto;gap:8px;margin-bottom:8px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);width:min(520px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.empty{text-align:center;padding:60px 20px;color:var(--mut)}
+/* paper */
+.page{background:#fff;color:#000;border:1px solid #bbb;padding:.45in;margin:0 auto 18px;max-width:8.5in;font:11pt/1.35 Arial,Helvetica,sans-serif}
+.page *{color:#000}
+.ph{border:2px solid #000;margin-bottom:10px}
+.ph-t{padding:6px 10px;font-weight:700;font-size:14pt;border-bottom:1px solid #000;background:#e8e8e8}.ph-t .ics{margin-right:10px}
+.ph-meta+.ph-meta{border-top:1px solid #000}.ph-meta{display:flex;gap:0}.ph-meta>div{padding:5px 10px;flex:1;font-size:10pt}.ph-meta>div+div{border-left:1px solid #000}
+.pf{border:1px solid #000;padding:4px 8px;margin-bottom:6px}.pf>b{display:block;font-size:9pt;text-transform:uppercase}
+.pf .v{white-space:pre-wrap;min-height:16px}
+.pfg{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+table.pt{border-collapse:collapse;width:100%;margin-bottom:8px;font-size:9pt}
+table.pt th,table.pt td{border:1px solid #000;padding:3px 5px;text-align:left;vertical-align:top}table.pt th{background:#e8e8e8}
+.pcap{font-weight:700;font-size:10pt;margin:8px 0 3px}
+.pfoot{font-size:8pt;margin-top:10px;border-top:1px solid #777;padding-top:4px}
+.cover{text-align:center;padding-top:1.2in}.cover h1{font-size:30pt;margin:0 0 8px}.cover .big{font-size:20pt;font-weight:700}.cover ul{display:inline-block;text-align:left;margin-top:24px}
+.oc{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}.orow{display:flex;gap:8px;margin-top:14px}
+.ob{border:1.5px solid #000;padding:4px 6px;text-align:center;font-size:8.5pt}.ob b{display:block}.ob.chief{background:#e8e8e8}.ob.sub{margin-left:12px;border-style:dashed}
+.ctop{display:flex;justify-content:center}.ctop .ob{width:200px}
+.cstaff{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}.cstaff .ob{width:150px}
+#printRoot{display:none}
+.sigbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px;padding:6px 8px;border:1px dashed var(--line);border-radius:6px;font-size:13px}
+.sigbox img{height:44px;background:#fff;border-radius:4px;padding:2px;border:1px solid var(--line)}.sigbox select{width:auto;min-width:200px}
+.sigbox .stale{color:var(--warn);font-weight:600}
+#sc{width:100%;height:170px;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:none;cursor:crosshair;display:block}
+.sglist{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}.sglist img{height:46px;background:#fff;border-radius:4px;padding:2px}
+.drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:26px 14px;text-align:center;cursor:pointer;color:var(--mut)}.drop.over,.drop:hover{border-color:var(--acc);color:var(--ink)}
+.cvprev{max-width:100%;max-height:340px;display:block;margin:12px auto;border-radius:6px;border:1px solid var(--line)}
+.cimg{margin:0 0 18px}.cimg img{max-width:100%;max-height:4.4in;object-fit:contain;display:block;margin:0 auto}.cimg figcaption{font-size:9pt;margin-top:5px;text-align:center}
+.cover.hasimg{padding-top:0}.cover.hasimg h1{font-size:26pt}
+.sigimg{height:42px;display:block;margin-top:3px}.sigmeta{font-size:8pt}
+@media (max-width:860px){#app{grid-template-columns:1fr}#side{position:static;height:auto}.grid2{grid-template-columns:1fr}.rg{grid-template-columns:1fr 1fr}.rg.h{display:none}.log .e{grid-template-columns:1fr}#main{padding:0 12px 60px}}
+@media print{
+ body{background:#fff}#app{display:none!important}#printRoot{display:block}
+ .page{border:0;margin:0;padding:0;max-width:none;page-break-after:always}.page:last-child{page-break-after:auto}
+ @page{margin:.5in}
+}
+</style>
+</head>
+<body>
+<div id="app"><aside id="side"></aside><main id="main"></main></div>
+<div id="printRoot"></div>
+<dialog id="dlg"><form method="dialog"><h3 id="dtt" style="margin-top:0"></h3><div id="dbody"></div><div class="row end"><button value="cancel" class="ghost">Cancel</button><button value="ok" class="pri">OK</button></div></form></dialog>
+<dialog id="sigdlg"><div id="sigbody"></div></dialog>
+<input type="file" id="imp" accept=".json" hidden>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,'0');
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const toLocal=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+const fmt=s=>{if(!s)return '';const d=new Date(s);return isNaN(d)?s:pad(d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear()+' '+pad(d.getHours())+pad(d.getMinutes())};
+const KEY='iap-builder-v1';
+
+/* ---------- ICS command structure ---------- */
+const ROSTER=[
+ {g:'Command',rows:['Incident Commander(s)','Deputy Incident Commander','Safety Officer','Public Information Officer','Liaison Officer']},
+ {g:'Planning Section',rows:['Chief','Deputy','Resources Unit Leader','Situation Unit Leader','Documentation Unit Leader','Demobilization Unit Leader','Technical Specialist(s)']},
+ {g:'Logistics Section',rows:['Chief','Deputy','Support Branch Director','Supply Unit Leader','Facilities Unit Leader','Ground Support Unit Leader','Service Branch Director',
+   'Communications Unit Leader (COML)','Incident Communications Technician (COMT)','Radio Operator (RADO)','Incident Communications Center Manager (INCM)','Auxiliary Communications Coordinator (AUXC)','Medical Unit Leader','Food Unit Leader']},
+ {g:'Operations Section',rows:['Chief','Deputy','Staging Area Manager','Air Operations Branch Director']},
+ {g:'Finance/Administration Section',rows:['Chief','Deputy','Time Unit Leader','Procurement Unit Leader','Compensation/Claims Unit Leader','Cost Unit Leader']}
+];
+const SECS=['Command','Agency/Org Rep',...ROSTER.slice(1).map(x=>x.g)];
+const STATUS=['Filled','Not activated','Needed - unfilled'];
+const rk=(g,pos)=>g+'|'+pos;
+const COML=rk('Logistics Section','Communications Unit Leader (COML)');
+/* who to ask for each form: [roster key, fallback text] */
+const OWNER={
+ f201:[rk('Command','Incident Commander(s)'),''],
+ f202:[rk('Planning Section','Chief'),'Planning Section Chief prepares; Incident Commander approves. If unfilled, the IC owns it.'],
+ f203:[rk('Planning Section','Resources Unit Leader'),'If unfilled, the Planning Section Chief (or IC) maintains the roster.'],
+ f204:[rk('Operations Section','Chief'),'If no Operations Section Chief is filled, the IC directs tactical assignments.'],
+ f205:[COML,'No COML: the Logistics Section Chief (or IC) owns the communications plan. Consider activating a COML.'],
+ f205a:[COML,'No COML: the Logistics Section Chief (or IC) owns the communications list.'],
+ f206:[rk('Logistics Section','Medical Unit Leader'),'No Medical Unit Leader: Logistics Section Chief / Safety Officer owns the medical plan.'],
+ f207:[rk('Planning Section','Resources Unit Leader'),'Built automatically from ICS 203.'],
+ f208:[rk('Command','Safety Officer'),'No Safety Officer: the IC owns the safety message.'],
+ f213:[rk('Command','Incident Commander(s)'),''],
+ f213rr:[rk('Logistics Section','Chief'),'No Logistics Section Chief: route resource requests through the IC.'],
+ f215:[rk('Operations Section','Chief'),'No Operations Section Chief: the IC owns the operational planning worksheet.'],
+ f217a:[COML,'No COML: the Logistics Section Chief (or IC) owns channel availability.'],
+ f309:[COML,'No COML: the Logistics Section Chief (or IC) owns the communications log.']
+};
+
+/* ---------- form schema ---------- */
+const T=(k,l,x)=>Object.assign({k,l,t:'text'},x||{});
+const A=(k,l,x)=>Object.assign({k,l,t:'area'},x||{});
+const C=(k,l,x)=>Object.assign({k,l,t:'text'},x||{});
+const YN=['Yes','No'],YNN=['Y','N'];
+const SCHEMA={
+ f201:{n:'ICS 201',t:'Incident Briefing',scope:'inc',items:[
+  A('sketch','Map / Sketch (describe, or note the attached map showing incident area, key features, resource locations)'),
+  A('summary','Situation Summary and Health & Safety Briefing (hazards identified and protective measures)'),
+  {k:'actions',l:'Current and Planned Actions',t:'table',min:4,cols:[C('t','Time',{t:'dt'}),C('a','Summarize current and planned actions')]},
+  {k:'res',l:'Resource Summary',t:'table',min:4,cols:[C('r','Resource'),C('id','Resource identification'),C('ord','Date/time ordered',{t:'dt'}),C('eta','ETA'),C('arr','Arrived?',{t:'select',o:YN}),C('n','Notes')]},
+  T('prepName','Prepared by - Name',{half:1}),T('prepPos','Position / Title',{half:1})]},
+ f202:{n:'ICS 202',t:'Incident Objectives',items:[
+  {k:'objectives',l:'Objective(s)',t:'list',min:3},
+  A('emphasis','Operational Period Command Emphasis'),
+  A('sitaware','General Situational Awareness'),
+  {k:'ssp',l:'Site Safety Plan Required?',t:'yn'},
+  T('sspLoc','Approved Site Safety Plan(s) Located at'),
+  {k:'contents',l:'Incident Action Plan (the items checked are included in this plan)',t:'contents'},
+  T('other','Other attachments'),
+  T('prepName','Prepared by - Name',{half:1}),T('prepPos','Position / Title',{half:1}),
+  T('apprName','Approved by Incident Commander - Name',{half:1}),T('apprDT','Approval date/time',{half:1,t:'dt'})]},
+ f203:{n:'ICS 203',t:'Organization Assignment List',items:[
+  {k:'r',l:'Incident Command Structure and Staffing',t:'roster'},
+  {k:'extra',l:'Additional positions (agency reps, branches, divisions, groups, other)',t:'table',min:3,cols:[C('sec','Section',{t:'select',o:SECS}),C('pos','Position'),C('name','Name'),C('agency','Agency'),C('phone','Contact')]},
+  T('prepName','Prepared by - Name (Resources Unit)',{half:1}),T('prepPos','Position / Title',{half:1})]},
+ f204:{n:'ICS 204',t:'Assignment List',inst:1,items:[
+  T('branch','Branch',{half:1}),T('div','Division / Group / Staging',{half:1}),
+  T('opsChief','Operations Section Chief',{half:1}),T('branchDir','Branch Director',{half:1}),T('divSup','Division / Group Supervisor',{half:1}),T('divContact','Supervisor contact',{half:1}),
+  {k:'res',l:'Resources Assigned',t:'table',min:4,cols:[C('id','Resource identifier'),C('leader','Leader'),C('n','# persons',{t:'num'}),C('contact','Contact (phone / radio)'),C('rem','Reporting info / notes / remarks')]},
+  A('work','Work Assignments'),A('special','Special Instructions'),
+  {k:'comms',l:'Communications (radio and/or phone contact numbers needed for this assignment)',t:'table',min:3,cols:[C('f','Name / Function'),C('c','Primary contact (cell / radio freq / system / channel)')]},
+  T('emMed','Emergency communications - Medical',{half:1}),T('emEvac','Emergency communications - Evacuation',{half:1}),T('emOther','Emergency communications - Other',{half:1}),
+  T('prepName','Prepared by',{half:1}),T('revPSC','Reviewed by PSC',{half:1}),T('revOSC','Reviewed by OSC',{half:1}),T('dt','Date/time',{t:'dt',half:1})]},
+ f205:{n:'ICS 205',t:'Incident Radio Communications Plan',items:[
+  {k:'ch',l:'Basic Radio Channel Use',t:'table',min:6,cols:[C('zone','Zone / Grp'),C('ch','Ch #'),C('fn','Function'),C('name','Channel name / talkgroup'),C('as','Assignment'),C('rxf','RX freq (N/W)'),C('rxt','RX tone/NAC'),C('txf','TX freq (N/W)'),C('txt','TX tone/NAC'),C('mode','Mode',{t:'select',o:['A','D','M']}),C('rem','Remarks')]},
+  A('special','Special Instructions'),
+  T('prepName','Prepared by (Communications Unit Leader) - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]},
+ f205a:{n:'ICS 205A',t:'Communications List',items:[
+  {k:'list',l:'Basic Local Communications Information',t:'table',min:8,cols:[C('pos','Incident assigned position'),C('name','Name'),C('m','Method(s) of contact (phone, pager, cell, etc.)')]},
+  T('prepName','Prepared by - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]},
+ f206:{n:'ICS 206',t:'Medical Plan',items:[
+  {k:'aid',l:'Medical Aid Stations',t:'table',min:2,cols:[C('n','Name'),C('l','Location'),C('c','Contact number(s) / frequency'),C('p','Paramedics on site?',{t:'select',o:YNN})]},
+  {k:'amb',l:'Transportation - Ambulance Services',t:'table',min:2,cols:[C('n','Name'),C('a','Address'),C('c','Contact number(s) / frequency'),C('lv','Level',{t:'select',o:['ALS','BLS']})]},
+  {k:'iamb',l:'Incident Ambulances',t:'table',min:2,cols:[C('n','Name'),C('l','Location'),C('c','Contact number(s) / frequency'),C('lv','Level',{t:'select',o:['ALS','BLS']})]},
+  {k:'hosp',l:'Hospitals',t:'table',min:3,cols:[C('n','Name'),C('a','Address'),C('c','Contact number(s) / frequency'),C('ta','Travel time air'),C('tg','Travel time ground'),C('tr','Trauma center (Y/N + level)'),C('bu','Burn center',{t:'select',o:YNN}),C('hp','Helipad',{t:'select',o:YNN})]},
+  A('proc','Special Medical Emergency Procedures'),
+  {k:'avi',l:'Aviation assets utilized for rescue? (if yes, coordinate with Air Operations)',t:'yn'},
+  T('prepName','Prepared by (Medical Unit Leader)',{half:1}),T('apprName','Reviewed by (Safety Officer)',{half:1})]},
+ f207:{n:'ICS 207',t:'Incident Organization Chart',auto:1,items:[]},
+ f208:{n:'ICS 208',t:'Safety Message / Plan',items:[
+  A('msg','Safety Message / Expanded Safety Message, Safety Plan, Site Safety Plan',{rows:8}),
+  {k:'ssp',l:'Site Safety Plan Required?',t:'yn'},
+  T('sspLoc','Approved Site Safety Plan(s) Located at'),
+  T('prepName','Prepared by (Safety Officer) - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]},
+ f213:{n:'ICS 213',t:'General Message',inst:1,items:[
+  T('toName','To (name)',{half:1}),T('toPos','To (position)',{half:1}),
+  T('fromName','From (name)',{half:1}),T('fromPos','From (position)',{half:1}),
+  T('subject','Subject',{half:1}),T('dt','Date/time',{t:'dt'}),
+  A('msg','Message',{rows:6}),
+  T('apprName','Approved by - Name',{half:1}),T('apprPos','Position / Title',{half:1}),
+  A('reply','Reply',{rows:4}),
+  T('replyName','Replied by - Name',{half:1}),T('replyPos','Position / Title',{half:1}),T('replyDT','Reply date/time',{t:'dt'})]},
+ f213rr:{n:'ICS 213RR',t:'Resource Request Message',inst:1,items:[
+  T('reqNo','Resource request number',{half:1}),T('dt','Date/time',{t:'dt'}),
+  {k:'items',l:'Resources requested',t:'table',min:4,cols:[C('qty','Qty',{t:'num'}),C('kind','Kind'),C('type','Type'),C('desc','Detailed item description / special requirements'),C('pri','Priority',{t:'select',o:['Immediate','Urgent','Routine']})]},
+  T('loc','Delivery / reporting location'),T('arr','Requested delivery / arrival date-time',{t:'dt'}),
+  T('subs','Suitable substitutes and/or alternate delivery location'),
+  T('reqName','Requested by - Name',{half:1}),T('reqPos','Position / Title',{half:1}),T('reqContact','Contact (phone / radio)',{half:1}),
+  T('apprName','Section Chief review / approval',{half:1}),
+  T('orderNo','Logistics order number',{half:1}),T('supplier','Supplier / POC / phone',{half:1}),
+  A('lnotes','Logistics notes (ETA, supplier, comments)',{rows:3}),
+  A('fnotes','Finance / Admin comments',{rows:2})]},
+ f215:{n:'ICS 215',t:'Operational Planning Worksheet',inst:1,items:[
+  T('title','Worksheet name (e.g. "Day shift - Division A-C")'),
+  {k:'rows',l:'Work assignments and resource needs (one row per division/group per resource type)',t:'table',min:5,sum:['req','have','need'],cols:[C('div','Division / Group / Other'),C('work','Work assignment & special instructions'),C('rtype','Resource kind / type'),C('req','Req',{t:'num'}),C('have','Have',{t:'num'}),C('need','Need',{t:'num'}),C('loc','Reporting location'),C('arr','Requested arrival',{t:'dt'})]},
+  T('prepName','Prepared by - Name',{half:1}),T('prepPos','Position / Title',{half:1})]},
+ f217a:{n:'ICS 217A',t:'Communications Resource Availability Worksheet',inst:1,items:[
+  T('title','Worksheet name (e.g. "Interoperability channels", "AUXCOMM amateur")'),
+  {k:'tpl',l:'Channel templates (adds rows - NIFOG rows verified against CISA NIFOG 2.02; AUXCOMM rows are local - fill in)',t:'tpl'},
+  {k:'ch',l:'Available channels',t:'table',min:4,cols:[C('sys','System / zone'),C('ch','Ch #'),C('fn','Function'),C('name','Channel name / talkgroup'),C('rxf','RX freq (N/W)'),C('rxt','RX tone/NAC'),C('txf','TX freq (N/W)'),C('txt','TX tone/NAC'),C('mode','Mode',{t:'select',o:['A','D','M']}),C('rem','Remarks')]},
+  T('prepName','Prepared by - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]},
+ f309:{n:'ICS 309',t:'Communications Log',inst:1,items:[
+  T('op','Radio operator - Name',{half:1}),T('opPos','Position / station ID',{half:1}),
+  {k:'log',l:'Communications log',t:'table',min:8,now:1,cols:[C('t','Time',{t:'dt'}),C('to','To (name / ID)'),C('from','From (name / ID)'),C('msg','Message')]},
+  T('prepName','Prepared by - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]}
+};
+const IAP_ORDER=['f202','f203','f204','f205','f205a','f206','f207','f208'];
+const EXTRA=['f215','f217a','f213','f213rr','f309'];
+const INST=['f204',...EXTRA];
+const INC_DEFAULT={map:false,wx:false,f213:false,f213rr:false,f309:false};
+const arr=(p,k)=>p.d[k]||(p.d[k]=[]);
+/* ---------- e-signatures ---------- */
+const SIGKEYS=['prepName','apprName','revPSC','revOSC','replyName','reqName','op'];
+const SIG_SKIP=/_sig$|^(apprName|apprPos|apprDT|revPSC|revOSC|replyName|replyPos|replyDT)$/;
+function norm(v){if(Array.isArray(v)){const a=v.map(norm).filter(x=>x!==undefined);return a.length?a:undefined}
+ if(v&&typeof v==='object'){const o={};Object.keys(v).sort().forEach(k=>{if(k==='id'||SIG_SKIP.test(k))return;const n=norm(v[k]);if(n!==undefined)o[k]=n});return Object.keys(o).length?o:undefined}
+ if(typeof v==='string')return v.trim()===''?undefined:v.trim();return v==null?undefined:v}
+const fh=o=>{const s=JSON.stringify(norm(o))||'';let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h>>>0)};
+/* self-contained SHA-256 so PIN hashes are identical on every browser/origin (crypto.subtle needs a secure context) */
+const SHA_K=[],SHA_H=[];(()=>{let n=2,c=0;while(c<64){let p=true;for(let i=2;i*i<=n;i++)if(n%i===0){p=false;break}if(p){if(c<8)SHA_H[c]=(Math.pow(n,.5)%1*4294967296)>>>0;SHA_K[c]=(Math.pow(n,1/3)%1*4294967296)>>>0;c++}n++}})();
+function sha256(str){const m=new TextEncoder().encode(str),l=m.length,n=((l+9+63)>>6)<<6,b=new Uint8Array(n);b.set(m);b[l]=0x80;const dv=new DataView(b.buffer);dv.setUint32(n-4,(l*8)>>>0);dv.setUint32(n-8,Math.floor(l*8/4294967296));
+ const h=SHA_H.slice(),w=new Uint32Array(64),r=(x,k)=>(x>>>k)|(x<<(32-k));
+ for(let o=0;o<n;o+=64){for(let i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);for(let i=16;i<64;i++){const a=w[i-15],c=w[i-2];w[i]=(w[i-16]+(r(a,7)^r(a,18)^(a>>>3))+w[i-7]+(r(c,17)^r(c,19)^(c>>>10)))>>>0}
+  let[a,bb,c,d,e,f,g,hh]=h;for(let i=0;i<64;i++){const t1=(hh+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+SHA_K[i]+w[i])>>>0,t2=((r(a,2)^r(a,13)^r(a,22))+((a&bb)^(a&c)^(bb&c)))>>>0;hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=bb;bb=a;a=(t1+t2)>>>0}
+  [a,bb,c,d,e,f,g,hh].forEach((v,i)=>h[i]=(h[i]+v)>>>0)}
+ return h.map(x=>x.toString(16).padStart(8,'0')).join('')}
+async function pinHash(pin,salt){return sha256(salt+':'+pin)}
+function trimCanvas(c){const x=c.getContext('2d'),w=c.width,h=c.height,d=x.getImageData(0,0,w,h).data;let x0=w,y0=h,x1=-1,y1=-1;
+ for(let y=0;y<h;y++)for(let i=0;i<w;i++)if(d[(y*w+i)*4+3]>10){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
+ if(x1<0)return null;const pd=6,o=document.createElement('canvas');o.width=x1-x0+1+pd*2;o.height=y1-y0+1+pd*2;o.getContext('2d').drawImage(c,x0,y0,x1-x0+1,y1-y0+1,pd,pd,x1-x0+1,y1-y0+1);return o.toDataURL('image/png')}
+const sigStale=(o,s)=>s.hash!==fh(o);
+function sigCtl(key,o){const s=o[key+'_sig'],sigs=S.sigs||[];
+ if(s)return `<div class="sigbox"><img src="${esc(s.img)}" alt="signature"><div><b>Signed electronically</b> by ${esc(s.name)}${s.pos?', '+esc(s.pos):''}<br><span class="mut">${fmt(s.at)}</span>${sigStale(o,s)?' <span class="stale">&#9888; form edited after signing - re-sign</span>':''}</div><button data-act="unsign" data-k="${key}">Remove signature</button></div>`;
+ if(!sigs.length)return `<div class="sigbox"><span class="mut">No signature on file.</span><button data-act="sigNew">+ Add my e-signature</button></div>`;
+ const pick=sigs.find(g=>g.name&&g.name===o[key])||sigs[0];
+ return `<div class="sigbox"><select>${sigs.map(g=>`<option value="${g.id}" ${g.id===pick.id?'selected':''}>${esc(g.name)}${g.pos?' - '+esc(g.pos):''}${g.pin?' (PIN)':''}</option>`).join('')}</select><button data-act="sign" data-k="${key}">Sign</button><button class="ghost" data-act="sigMgr">Manage</button></div>`}
+const sigPrint=(o,k)=>{const s=o[k+'_sig'];return s?`<img class="sigimg" src="${esc(s.img)}" alt=""><div class="sigmeta">Electronically signed: ${esc(s.name)}${s.pos?', '+esc(s.pos):''} - ${fmt(s.at)}${sigStale(o,s)?' - FORM EDITED AFTER SIGNING':''}</div>`:''};
+let sg={mode:'draw',drawn:false};
+function sigMgrHTML(){const l=S.sigs||[];return `<h3 style="margin-top:0">Saved e-signatures</h3><p class="mut" style="font-size:13px">Stored only in this browser (not encrypted). Anyone using this browser can apply a signature that has no PIN, so use a PIN on shared computers. Check your agency's policy on electronic signatures.</p>${l.map(g=>`<div class="sglist"><img src="${esc(g.img)}" alt=""><div style="flex:1"><b>${esc(g.name)}</b><br><span class="mut">${esc(g.pos)} ${g.pin?'&middot; PIN protected':'&middot; no PIN'} &middot; added ${fmt(g.at)}</span></div><button class="danger" data-act="sigDel" data-id="${g.id}">Delete</button></div>`).join('')||'<p class="mut">None yet.</p>'}<div class="row end"><button data-act="sigClose" class="ghost">Close</button><button data-act="sigNew" class="pri">+ New signature</button></div>`}
+function sigNewHTML(){return `<h3 style="margin-top:0">New e-signature</h3>
+ <label class="f"><span>Full name</span><input id="sgName" value="${esc(sg.name)}"></label>
+ <label class="f"><span>ICS position / title (optional)</span><input id="sgPos" value="${esc(sg.pos)}"></label>
+ <div class="chips"><button data-act="sigMode" data-m="draw" class="${sg.mode==='draw'?'on':''}">Draw</button><button data-act="sigMode" data-m="type" class="${sg.mode==='type'?'on':''}">Type</button></div>
+ ${sg.mode==='type'?`<label class="f"><span>Type your name</span><input id="sgType" value="${esc(sg.typed)}"></label>`:'<p class="mut" style="margin:0 0 6px;font-size:13px">Sign below with mouse, finger or stylus.</p>'}
+ <canvas id="sc" width="600" height="200"></canvas>
+ <div class="row"><button data-act="sigClear">Clear</button></div>
+ <label class="f" style="margin-top:10px"><span>PIN to protect this signature (optional, recommended on shared computers)</span><input id="sgPin" type="password" inputmode="numeric" autocomplete="new-password" value=""></label>
+ <label class="chk"><input type="checkbox" id="sgCons">I am the person named above and I adopt this as my electronic signature.</label>
+ <div class="row end"><button data-act="sigMgr" class="ghost">Cancel</button><button data-act="sigSave" class="pri" id="sgSave" disabled>Save signature</button></div>`}
+function sigShow(html){const d=$('#sigdlg');$('#sigbody').innerHTML=html;if(!d.open)d.showModal()}
+function sigCanvas(){const c=$('#sc'),x=c.getContext('2d');x.lineWidth=3;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#111';x.fillStyle='#111';
+ if(sg.mode==='type'){drawTyped();return}
+ let dn=false,l=null;const pt=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};
+ c.onpointerdown=e=>{dn=true;c.setPointerCapture(e.pointerId);l=pt(e);x.beginPath();x.moveTo(l[0],l[1]);x.lineTo(l[0]+.1,l[1]);x.stroke();sg.drawn=true;sigChk()};
+ c.onpointermove=e=>{if(!dn)return;const q=pt(e);x.beginPath();x.moveTo(l[0],l[1]);x.lineTo(q[0],q[1]);x.stroke();l=q};
+ c.onpointerup=c.onpointercancel=()=>{dn=false}}
+function drawTyped(){const c=$('#sc'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);const t=($('#sgType')||{}).value||'';sg.drawn=t.trim()!=='';
+ x.fillStyle='#111';x.font='italic 76px "Segoe Script","Brush Script MT","Lucida Handwriting",cursive';x.textBaseline='middle';x.fillText(t,20,100,560);sigChk()}
+function sigChk(){const b=$('#sgSave');if(b)b.disabled=!(sg.drawn&&($('#sgName')||{}).value.trim()&&$('#sgCons').checked)}
+/* ---------- cover image ---------- */
+const coverImg=inc=>inc.cover&&inc.cover.imgId&&S.images&&S.images[inc.cover.imgId]||'';
+function loadImage(file){return new Promise((res,rej)=>{if(!file||!/^image\//.test(file.type)){rej('That is not an image file.');return}
+ const fr=new FileReader();fr.onerror=()=>rej('Could not read the file.');
+ fr.onload=()=>{const im=new Image();im.onerror=()=>rej('Could not decode that image.');
+  im.onload=()=>{const M=1600,s=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
+   const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res({url:c.toDataURL('image/jpeg',0.85),w:c.width,h:c.height})};
+  im.src=fr.result};fr.readAsDataURL(file)})}
+async function setCover(file){try{const r=await loadImage(file),inc=curInc();S.images=S.images||{};
+ if(inc.cover&&inc.cover.imgId)delete S.images[inc.cover.imgId];
+ const id=uid();S.images[id]=r.url;inc.cover=Object.assign(inc.cover||{},{imgId:id,name:file.name||'pasted image',size:r.w+' x '+r.h+' px, '+Math.round(r.url.length*.75/1024)+' KB'});
+ ui.form='cover';ui.preview=false;save();render()}catch(e){alert(e)}}
+const PREP_KEYS=['prepName','prepPos','op','opPos','reqName','reqPos','reqContact','fromName','fromPos'];
+const remOn=()=>!(S.settings&&S.settings.rememberPrep===false);
+function fillPrep(inc,f,o){const m=inc.prep&&inc.prep[f];if(!m||!remOn())return;PREP_KEYS.forEach(k=>{if(m[k]&&!o[k]&&SCHEMA[f].items.some(i=>i.k===k))o[k]=m[k]})}
+const instLabel=(k,x,i)=>{const v={f204:x.div||x.branch,f213:x.subject,f213rr:((x.items||[])[0]||{}).kind||x.reqNo,f215:x.title,f217a:x.title,f309:x.op}[k];return v||SCHEMA[k].n+' #'+(i+1)};
+const nf=(sys,ch,fn,rxf,rxt,txf,txt,mode,rem)=>[[sys,ch,fn,ch,rxf,rxt,txf,txt,mode,rem]];
+const TPL={
+ nifog_vhf:{l:'NIFOG VHF simplex (VCALL10, VTAC11-14)',rows:[
+  ...nf('NIFOG VHF','VCALL10','Calling','155.7525','156.7','155.7525','156.7','A','Nationwide calling. 11K0F3E narrowband FM; no encryption'),
+  ...nf('NIFOG VHF','VTAC11','Tactical','151.1375','156.7','151.1375','156.7','A','Not for use in PR / USVI'),
+  ...nf('NIFOG VHF','VTAC12','Tactical','154.4525','156.7','154.4525','156.7','A','Not for use in PR / USVI'),
+  ...nf('NIFOG VHF','VTAC13','Tactical','158.7375','156.7','158.7375','156.7','A',''),
+  ...nf('NIFOG VHF','VTAC14','Tactical','159.4725','156.7','159.4725','156.7','A','')]},
+ nifog_vtacr:{l:'NIFOG VHF repeater (VTAC33-38)',rows:[
+  ...nf('NIFOG VHF RPT','VTAC33','Tactical repeater','159.4725','156.7','151.1375','136.5','A','Not for PR / USVI; use VTAC36-38 first'),
+  ...nf('NIFOG VHF RPT','VTAC34','Tactical repeater','158.7375','156.7','154.4525','136.5','A','Not for PR / USVI; use VTAC36-38 first'),
+  ...nf('NIFOG VHF RPT','VTAC35','Tactical repeater','159.4725','156.7','158.7375','136.5','A','Use only if interference on 36-38'),
+  ...nf('NIFOG VHF RPT','VTAC36','Tactical repeater','151.1375','156.7','159.4725','136.5','A','Preferred; not for PR / USVI'),
+  ...nf('NIFOG VHF RPT','VTAC37','Tactical repeater','154.4525','156.7','158.7375','136.5','A','Preferred; not for PR / USVI'),
+  ...nf('NIFOG VHF RPT','VTAC38','Tactical repeater','158.7375','156.7','159.4725','136.5','A','Preferred')]},
+ nifog_uhf:{l:'NIFOG UHF (UCALL40, UTAC41-43 + direct)',rows:[
+  ...nf('NIFOG UHF','UCALL40','Calling (repeater)','453.2125','156.7','458.2125','156.7','A','11K0F3E; no encryption'),
+  ...nf('NIFOG UHF','UCALL40D','Calling (direct)','453.2125','156.7','453.2125','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC41','Tactical (repeater)','453.4625','156.7','458.4625','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC41D','Tactical (direct)','453.4625','156.7','453.4625','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC42','Tactical (repeater)','453.7125','156.7','458.7125','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC42D','Tactical (direct)','453.7125','156.7','453.7125','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC43','Tactical (repeater)','453.8625','156.7','458.8625','156.7','A',''),
+  ...nf('NIFOG UHF','UTAC43D','Tactical (direct)','453.8625','156.7','453.8625','156.7','A','')]},
+ nifog_700:{l:'NIFOG 700 MHz P25 (7CALL50, 7TAC51-56, 7GTAC57, 7MOB59)',rows:[
+  ...nf('NIFOG 700','7CALL50','Calling (repeater)','769.24375','$F7E','799.24375','$293','D','P25 Ph I; default TG $0001; no encryption on calling'),
+  ...nf('NIFOG 700','7CALL50D','Calling (direct)','769.24375','$F7E','769.24375','$293','D',''),
+  ...nf('NIFOG 700','7TAC51','Gen. public safety','769.14375','$F7E','799.14375','$293','D','AES allowed; user must be able to disable'),
+  ...nf('NIFOG 700','7TAC51D','Gen. public safety (direct)','769.14375','$F7E','769.14375','$293','D',''),
+  ...nf('NIFOG 700','7TAC52','Gen. public safety','769.64375','$F7E','799.64375','$293','D',''),
+  ...nf('NIFOG 700','7TAC52D','Gen. public safety (direct)','769.64375','$F7E','769.64375','$293','D',''),
+  ...nf('NIFOG 700','7TAC53','Gen. public safety','770.14375','$F7E','800.14375','$293','D',''),
+  ...nf('NIFOG 700','7TAC53D','Gen. public safety (direct)','770.14375','$F7E','770.14375','$293','D',''),
+  ...nf('NIFOG 700','7TAC54','Gen. public safety','770.64375','$F7E','800.64375','$293','D',''),
+  ...nf('NIFOG 700','7TAC54D','Gen. public safety (direct)','770.64375','$F7E','770.64375','$293','D',''),
+  ...nf('NIFOG 700','7TAC55','Gen. public safety','769.74375','$F7E','799.74375','$293','D',''),
+  ...nf('NIFOG 700','7TAC55D','Gen. public safety (direct)','769.74375','$F7E','769.74375','$293','D',''),
+  ...nf('NIFOG 700','7TAC56','Gen. public safety','770.24375','$F7E','800.24375','$293','D',''),
+  ...nf('NIFOG 700','7TAC56D','Gen. public safety (direct)','770.24375','$F7E','770.24375','$293','D',''),
+  ...nf('NIFOG 700','7GTAC57','Other public safety','770.99375','$F7E','800.99375','$293','D',''),
+  ...nf('NIFOG 700','7GTAC57D','Other public safety (direct)','770.99375','$F7E','770.99375','$293','D',''),
+  ...nf('NIFOG 700','7MOB59','Mobile repeater','770.89375','$F7E','800.89375','$293','D','')]},
+ nifog_800:{l:'NIFOG 800 MHz (8CALL90, 8TAC91-94 + direct)',rows:[
+  ...nf('NIFOG 800','8CALL90','Calling (repeater)','851.0125','156.7','806.0125','156.7','A','14K0F3E recommended; no encryption'),
+  ...nf('NIFOG 800','8CALL90D','Calling (direct)','851.0125','156.7','851.0125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC91','Tactical','851.5125','156.7','806.5125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC91D','Tactical (direct)','851.5125','156.7','851.5125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC92','Tactical','852.0125','156.7','807.0125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC92D','Tactical (direct)','852.0125','156.7','852.0125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC93','Tactical','852.5125','156.7','807.5125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC93D','Tactical (direct)','852.5125','156.7','852.5125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC94','Tactical','853.0125','156.7','808.0125','156.7','A',''),
+  ...nf('NIFOG 800','8TAC94D','Tactical (direct)','853.0125','156.7','853.0125','156.7','A','')]},
+ auxcomm:{l:'AUXCOMM amateur (simplex calling + local placeholders)',rows:[
+  ['AUXCOMM','2M-CALL','Calling','2 m national simplex calling','146.520','','146.520','','A','Amateur FM simplex'],
+  ['AUXCOMM','70CM-CALL','Calling','70 cm simplex calling','446.000','','446.000','','A','Amateur FM simplex'],
+  ['AUXCOMM','1.25M-CALL','Calling','1.25 m simplex calling','223.500','','223.500','','A','Amateur FM simplex'],
+  ['AUXCOMM','6M-CALL','Calling','6 m simplex calling','52.525','','52.525','','A','Amateur FM simplex'],
+  ['AUXCOMM','LOCAL-RPT','Command / net','Primary AUXCOMM repeater (enter)','','','','','A','Enter local repeater freq / offset / tone'],
+  ['AUXCOMM','ALLSTAR','Linked net','AUXCOMM AllStar node (enter node #)','','','','','D','Enter node number / hub'],
+  ['AUXCOMM','HF-NVIS','HF net','HF NVIS net (enter freq)','','','','','M','Enter freq / mode; Winlink gateway if used']]}
+};
+/* NIFOG 2.02: 700 MHz second block + deployable trunked system */
+TPL.nifog_700b={l:'NIFOG 700 MHz (7CALL70, 7TAC71-76 + direct)',rows:[
+ ...nf('NIFOG 700','7CALL70','Secondary / incident calling','773.25625','$F7E','803.25625','$293','D','P25 Ph I; default TG $0001; no encryption on calling'),
+ ...nf('NIFOG 700','7CALL70D','Calling (direct)','773.25625','$F7E','773.25625','$293','D',''),
+ ...[['71','773.10625','803.10625'],['72','773.60625','803.60625'],['73','774.10625','804.10625'],['74','774.60625','804.60625'],['75','773.75625','803.75625'],['76','774.25625','804.25625']].flatMap(([n,rx,tx])=>[
+  ...nf('NIFOG 700','7TAC'+n,'Gen. public safety',rx,'$F7E',tx,'$293','D','AES allowed; user must be able to disable'),
+  ...nf('NIFOG 700','7TAC'+n+'D','Gen. public safety (direct)',rx,'$F7E',rx,'$293','D','')])]};
+TPL.nifog_dep={l:'NIFOG 700 MHz deployable trunked - channels A-F',rows:[
+ ['NIFOG 700 DEPLOY','A','Working','Deployable ch A','769.23125','','799.23125','','D','LICENSING/STA REQUIRED. System ID $101, WACN $BF7CC'],
+ ['NIFOG 700 DEPLOY','B','Working','Deployable ch B','769.38125','','799.38125','','D','Licensing/STA required'],
+ ['NIFOG 700 DEPLOY','C','Working','Deployable ch C','769.73125','','799.73125','','D','Not for use above A-Line in PA, NY, VT'],
+ ['NIFOG 700 DEPLOY','D','Working','Deployable ch D','769.88125','','799.88125','','D','Not for use above A-Line in PA, NY, VT'],
+ ['NIFOG 700 DEPLOY','E','Primary control','Deployable ch E','774.51875','','804.51875','','D','Primary control channel'],
+ ['NIFOG 700 DEPLOY','F','Secondary control','Deployable ch F','774.86875','','804.86875','','D','Secondary control channel']]};
+TPL.nifog_deptg={l:'NIFOG deployable trunked talkgroups (YY + ZZ zones)',rows:(()=>{const r=[];
+ [['YY',200],['ZZ',100]].forEach(([z,b])=>{for(let i=1;i<=16;i++){const nm=i===1?'CALL '+z:i===2?'CMD '+z:i===16?'EMER '+z:'TAC '+z+i;
+  const fn=i===1?'Calling / initial contact':i===2?'Pre-designated command':i===16?'Emergency':'General / tactical';
+  r.push(['NIFOG DEPLOY '+z,nm,fn,nm+' (TG '+(b+i)+')','','','','','D','System ID $101; TG dec '+(b+i)+' / hex $'+(b+i).toString(16).toUpperCase()+'; coordinate NAC with NRPC'])}});return r})()};
+/* AWIN ABIT (Arkansas Basic Interoperability Template, DPS/ADEM, effective 2 Jul 2018). Source lists names only (no TG IDs). Z7/Z8 use NIFOG channels. */
+(()=>{const seq=(p,n,s)=>Array.from({length:n},(_,i)=>p+(i+1)+(s||''));const L='ABCDEFGHIJKL'.split('');
+ const Z=[['Z1','ADEM-REG',['COUNTY TG','ADEM 1','ADEM 2',...seq('CENTRAL ',5),...seq('NW ',5)]],
+  ['Z2','REGION',[...seq('SW ',5),...seq('SE ',5),...seq('NE ',5)]],
+  ['Z3','MAC',['MAC CALL',...seq('MAC ',15)]],
+  ['Z4','LAW',[...L.map(x=>x+'-LAW COM'),'PRISONER','SO NET 1','SO NET 2']],
+  ['Z5','EMS',L.map(x=>x+'-EMS')],['Z6','FIRE',L.map(x=>x+'-FIRE')],
+  ['Z7','700 INT',['7CALL70','7CALL70D',...[1,2,3,4,5,6].flatMap(n=>['7TAC7'+n,'7TAC7'+n+'D'])]],
+  ['Z8','800 INT',['8CALL90','8CALL90D',...[1,2,3,4].flatMap(n=>['8TAC9'+n,'8TAC9'+n+'D'])]]];
+ const nrow={};[...TPL.nifog_700b.rows,...TPL.nifog_800.rows].forEach(r=>nrow[r[3]]=r);
+ const all=[];
+ Z.forEach(([z,zn,names])=>{const rows=names.map((nm,i)=>{const n=nrow[nm];const sys='AWIN ABIT '+z+' ('+zn+')',ch=z+'-'+(i+1);
+   return n?[sys,ch,zn,nm,n[4],n[5],n[6],n[7],n[8],'NIFOG interoperability channel (ABIT '+z+')']:[sys,ch,zn,nm,'','','','','D','AWIN P25 trunked talkgroup; TG ID per AWIN'];});
+  TPL['abit_'+z.toLowerCase()]={l:z+' '+zn+' ('+rows.length+')',rows};all.push(...rows)});
+ all.push(['AWIN ABIT Z9 (AGENCY)','Z9-1','AGENCY','Agency-specific talkgroups (enter)','','','','','D','Z9 is left for each agency in the ABIT']);
+ TPL.abit_all={l:'AWIN ABIT - full template (Z1-Z8)',rows:all}})();
+const isInc=(p,k)=>k in p.include?p.include[k]:(INC_DEFAULT[k]!==undefined?INC_DEFAULT[k]:true);
+
+/* ---------- state ---------- */
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.incidents)return s}catch(e){}return{incidents:[],cur:null}})();
+let ui={form:'f202',inst:null,preview:false};
+let saveT;
+function save(){
+ $('#saved')&&($('#saved').textContent='Saving...');
+ clearTimeout(saveT);
+ saveT=setTimeout(()=>{let m;try{localStorage.setItem(KEY,JSON.stringify(S));m='Saved '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){m='NOT SAVED (storage blocked) - export a backup'}const el=$('#saved');if(el)el.textContent=m},250);
+}
+const curInc=()=>S.incidents.find(i=>i.id===S.cur);
+const curP=()=>{const i=curInc();return i&&i.periods[i.pi]};
+function newPeriod(from,to){return{id:uid(),from,to,status:'draft',include:{},d:{f202:{objectives:['','','']},f203:{},f204:[],f205:{},f205a:{},f206:{},f208:{}}}}
+function curObj(){const inc=curInc(),p=curP(),f=ui.form;
+ if(f==='f214')return inc;
+ if(f==='cover')return inc.cover=inc.cover||{};
+ if(INST.includes(f))return arr(p,f).find(x=>x.id===ui.inst);
+ return SCHEMA[f].scope==='inc'?inc.brief:p.d[f]}
+function ensure(items,o){items.forEach(it=>{
+ if((it.t==='table'||it.t==='list')&&!Array.isArray(o[it.k]))o[it.k]=Array.from({length:it.min||3},()=>it.t==='list'?'':{});
+ if(it.t==='roster'&&!o[it.k])o[it.k]={}})}
+function hasData(o){if(o==null)return false;if(typeof o==='string')return o.trim()!=='';if(Array.isArray(o))return o.some(hasData);if(typeof o==='object')return Object.entries(o).some(([k,v])=>k!=='id'&&k!=='s'&&hasData(v));return false}
+function setPath(o,path,v){for(let i=0;i<path.length-1;i++){if(o[path[i]]==null)o[path[i]]={};o=o[path[i]]}o[path[path.length-1]]=v}
+const rowOf=(p,key)=>((p.d.f203.r||{})[key])||{};
+const effStatus=r=>r.s||(r.n?'Filled':'Not activated');
+const isFilled=r=>effStatus(r)==='Filled'&&!!(r.n||'').trim();
+
+/* ---------- editor renderers ---------- */
+const P=a=>esc(JSON.stringify(a));
+function cell(c,v,path){
+ if(c.t==='select')return `<select data-p="${P(path)}"><option></option>${c.o.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+ return `<input type="${c.t==='dt'?'datetime-local':c.t==='num'?'number':'text'}" data-p="${P(path)}" value="${esc(v)}">`}
+function ed(it,o,p){
+ const v=o[it.k];
+ switch(it.t){
+ case 'text':{const lab=`<label class="f" style="margin-bottom:4px"><span>${it.l}</span><input type="text" data-p="${P([it.k])}" value="${esc(v)}"></label>`;
+  return SIGKEYS.includes(it.k)?`<div style="${it.half?'':'grid-column:1/-1;'}margin-bottom:12px">${lab}${sigCtl(it.k,o)}</div>`:`<div style="${it.half?'':'grid-column:1/-1;'}">${lab.replace('margin-bottom:4px','margin-bottom:12px')}</div>`}
+ case 'dt':return `<label class="f"><span>${it.l}</span><input type="datetime-local" data-p="${P([it.k])}" value="${esc(v)}"></label>`;
+ case 'area':return `<label class="f" style="grid-column:1/-1"><span>${it.l}</span><textarea data-p="${P([it.k])}" rows="${it.rows||4}">${esc(v)}</textarea></label>`;
+ case 'yn':return `<div class="f" style="grid-column:1/-1"><span class="cap">${it.l}</span>${YN.map(x=>`<label class="chk" style="display:inline-flex;margin-right:16px"><input type="radio" name="r_${it.k}" data-p="${P([it.k])}" value="${x}" ${v===x?'checked':''}>${x}</label>`).join('')}</div>`;
+ case 'list':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span>${v.map((x,i)=>`<div class="row" style="flex-wrap:nowrap;align-items:center"><b style="width:22px">${i+1}.</b><textarea rows="2" style="min-height:44px" data-p="${P([it.k,i])}">${esc(x)}</textarea><button class="danger" data-act="delrow" data-k="${it.k}" data-i="${i}" title="Remove">&times;</button></div>`).join('')}<button data-act="addrow" data-k="${it.k}" style="margin-top:6px">+ Add objective</button></div>`;
+ case 'table':return `<div style="grid-column:1/-1;margin-bottom:10px"><span class="cap">${it.l}</span><div class="tw"><table class="et"><thead><tr>${it.cols.map(c=>`<th>${c.l}</th>`).join('')}<th></th></tr></thead><tbody>${v.map((r,i)=>`<tr>${it.cols.map(c=>`<td>${cell(c,(r||{})[c.k],[it.k,i,c.k])}</td>`).join('')}<td><button class="danger" data-act="delrow" data-k="${it.k}" data-i="${i}" title="Remove row">&times;</button></td></tr>`).join('')}</tbody></table></div><button data-act="addrow" data-k="${it.k}">+ Add row</button></div>`;
+ case 'roster':return `<div style="grid-column:1/-1">${ROSTER.map(g=>`<h3 style="margin:16px 0 6px;font-size:15px">${g.g}</h3><div class="rg h"><span>Position</span><span>Status</span><span>Name</span><span>Agency</span><span>Contact</span></div>${g.rows.map(pos=>{const k=rk(g.g,pos),r=v[k]||{};const cl=k===COML?'coml':'';return `<div class="rg"><span class="pos ${cl}">${esc(pos)}</span><select data-p="${P([it.k,k,'s'])}">${STATUS.map(s=>`<option ${effStatus(r)===s?'selected':''}>${s}</option>`).join('')}</select><input placeholder="Name" data-p="${P([it.k,k,'n'])}" value="${esc(r.n)}"><input placeholder="Agency" data-p="${P([it.k,k,'a'])}" value="${esc(r.a)}"><input placeholder="Phone / radio" data-p="${P([it.k,k,'c'])}" value="${esc(r.c)}"></div>`}).join('')}`).join('')}</div>`;
+ case 'tpl':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span><div class="row">${Object.entries(TPL).filter(([k])=>!k.startsWith('abit')).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><span class="cap" style="margin-top:10px">AWIN ABIT (Arkansas Basic Interoperability Template, July 2018)</span><div class="row"><button data-act="tpl" data-tpl="abit_all" class="pri">+ ${esc(TPL.abit_all.l)}</button>${Object.entries(TPL).filter(([k])=>/^abit_z/.test(k)).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><div class="row"><button data-act="push205" class="pri">Copy these channels into ICS 205</button></div></div>`;
+ case 'contents':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span>${contentKeys(p).map(k=>`<label class="chk"><input type="checkbox" data-inc="${k}" ${isInc(p,k)?'checked':''}>${SCHEMA[k].n} - ${SCHEMA[k].t}</label>`).join('')}<label class="chk"><input type="checkbox" data-inc="map" ${isInc(p,'map')?'checked':''}>Map / Chart (attach)</label><label class="chk"><input type="checkbox" data-inc="wx" ${isInc(p,'wx')?'checked':''}>Weather forecast / tides / currents (attach)</label></div>`;
+ }return ''}
+
+/* ---------- print renderers ---------- */
+function ptable(cols,rows,sum){const rs=(rows||[]).filter(hasData);const r=rs.length?rs:[{}];
+ const tot=sum&&rs.length?`<tr>${cols.map((c,i)=>`<td><b>${sum.includes(c.k)?rs.reduce((a,x)=>a+(parseFloat(x[c.k])||0),0):i===0?'Totals':''}</b></td>`).join('')}</tr>`:'';
+ return `<table class="pt"><thead><tr>${cols.map(c=>`<th>${esc(c.l)}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr>${cols.map(c=>`<td>${esc(c.t==='dt'?fmt(x[c.k]):x[c.k])}</td>`).join('')}</tr>`).join('')}${tot}</tbody></table>`}
+const contentKeys=p=>[...IAP_ORDER,...EXTRA.filter(k=>(p.d[k]||[]).length)];
+function pr(it,o,p){
+ const v=o[it.k];
+ switch(it.t){
+ case 'text':return `<div class="pf" style="${it.half?'display:inline-block;width:49%;vertical-align:top;margin-right:.5%':''}"><b>${it.l}</b><div class="v">${esc(v)}</div>${SIGKEYS.includes(it.k)?sigPrint(o,it.k):''}</div>`;
+ case 'dt':return `<div class="pf" style="display:inline-block;width:49%"><b>${it.l}</b><div class="v">${esc(fmt(v))}</div></div>`;
+ case 'area':return `<div class="pf"><b>${it.l}</b><div class="v">${esc(v)}</div></div>`;
+ case 'yn':return `<div class="pf"><b>${it.l}</b><div class="v">${v==='Yes'?'&#9745; Yes &#9744; No':v==='No'?'&#9744; Yes &#9745; No':'&#9744; Yes &#9744; No'}</div></div>`;
+ case 'list':return `<div class="pf"><b>${it.l}</b><ol style="margin:4px 0 0 18px;padding:0">${(v||[]).filter(x=>x.trim()).map(x=>`<li style="white-space:pre-wrap">${esc(x)}</li>`).join('')||'<li>&nbsp;</li>'}</ol></div>`;
+ case 'table':return `<div class="pcap">${it.l}</div>${ptable(it.cols,v,it.sum)}`;
+ case 'roster':return ROSTER.map(g=>`<div class="pcap">${g.g}</div><table class="pt"><thead><tr><th>Position</th><th>Status</th><th>Name</th><th>Agency</th><th>Contact</th></tr></thead><tbody>${g.rows.map(pos=>{const r=(v||{})[rk(g.g,pos)]||{};return `<tr><td>${esc(pos)}</td><td>${esc(effStatus(r))}</td><td>${esc(r.n)}</td><td>${esc(r.a)}</td><td>${esc(r.c)}</td></tr>`}).join('')}</tbody></table>`).join('');
+ case 'tpl':return '';
+ case 'contents':return `<div class="pf"><b>${it.l}</b><div class="v">${contentKeys(p).map(k=>`${isInc(p,k)?'&#9745;':'&#9744;'} ${SCHEMA[k].n} ${SCHEMA[k].t}`).join('<br>')}<br>${isInc(p,'map')?'&#9745;':'&#9744;'} Map / Chart<br>${isInc(p,'wx')?'&#9745;':'&#9744;'} Weather forecast / tides / currents</div></div>`}
+ return ''}
+function orgChart(p){
+ const d=p.d.f203,r=d.r||{},ex=(d.extra||[]).filter(e=>e&&(e.pos||e.name));
+ const box=(t,n,c)=>`<div class="ob ${c||''}"><b>${esc(t)}</b>${esc(n)||'&nbsp;'}</div>`;
+ const nm=(g,pos)=>(r[rk(g,pos)]||{}).n||'';
+ const sec=g=>{const label=g.replace(' Section','');const g0=ROSTER.find(x=>x.g===g);
+  const cs=[box(label+' Section Chief',nm(g,'Chief'),'chief')];
+  g0.rows.forEach(pos=>{if(pos!=='Chief'&&nm(g,pos))cs.push(box(pos,nm(g,pos)))});
+  ex.filter(e=>e.sec===g).forEach(e=>cs.push(box(e.pos,e.name,'sub')));return `<div class="oc">${cs.join('')}</div>`};
+ const staff=[];['Deputy Incident Commander','Safety Officer','Public Information Officer','Liaison Officer'].forEach(pos=>{if(nm('Command',pos))staff.push(box(pos,nm('Command',pos)))});
+ ex.filter(e=>e.sec==='Command'||e.sec==='Agency/Org Rep').forEach(e=>staff.push(box(e.pos,e.name,'sub')));
+ return `<div class="ctop">${box('Incident Commander(s)',nm('Command','Incident Commander(s)'),'chief')}</div><div class="cstaff">${staff.join('')}</div><div class="orow">${['Operations Section','Planning Section','Logistics Section','Finance/Administration Section'].map(sec).join('')}</div>`}
+function page(title,n,inner,inc,p){
+ const opn=p?inc.periods.indexOf(p)+1:0;
+ const row=(a,b)=>`<div class="ph-meta"><div>${a}</div><div>${b}</div></div>`;
+ const meta=row(`1. Incident Name: <b>${esc(inc.name)}</b>`,`Incident #: <b>${esc(inc.number)||'&mdash;'}</b>`)
+  +(inc.type||inc.location?row(`Type: ${esc(inc.type)||'&mdash;'}`,`Location: ${esc(inc.location)||'&mdash;'}`):'')
+  +(inc.jurisdiction||inc.declaration?row(`Jurisdiction / Agency: ${esc(inc.jurisdiction)||'&mdash;'}`,`Declaration / Disaster #: ${esc(inc.declaration)||'&mdash;'}`):'')
+  +(p?row(`2. Operational Period ${opn}: <b>${fmt(p.from)}</b> to <b>${fmt(p.to)}</b>`,`Incident began: ${fmt(inc.started)||'&mdash;'}`):row(`Incident began: ${fmt(inc.started)||'&mdash;'}`,`Prepared: ${fmt(toLocal(new Date()))}`));
+ return `<section class="page"><div class="ph"><div class="ph-t"><span class="ics">${n}</span>${title}</div>${meta}</div>${inner}<div class="pfoot">${idLine(inc)}${p?' | Op Period '+opn+' ('+fmt(p.from)+' - '+fmt(p.to)+')':''} | ${n} | Printed ${fmt(toLocal(new Date()))}</div></section>`}
+const idLine=inc=>esc(inc.name)+(inc.number?' | #'+esc(inc.number):'');
+const idTitle=(inc,p)=>'IAP - '+inc.name+(inc.number?' #'+inc.number:'')+(p?' - OP'+(inc.periods.indexOf(p)+1)+' '+fmt(p.from):'');
+function formPage(k,inc,p,inst){
+ const s=SCHEMA[k];
+ if(k==='f207')return page(s.t,s.n,orgChart(p),inc,p);
+ const o=INST.includes(k)?inst:s.scope==='inc'?inc.brief:p.d[k];ensure(s.items,o);
+ return page(s.t,s.n,s.items.map(it=>pr(it,o,p)).join(''),inc,s.scope==='inc'?null:p);}
+function logPage(inc){const rows=[...(inc.log||[])].sort((a,b)=>(a.t||'').localeCompare(b.t||''));const l=inc.logger||{};
+ return page('Activity Log','ICS 214',`<div class="pfg"><div class="pf"><b>Name</b>${esc(l.name)}</div><div class="pf"><b>ICS position</b>${esc(l.pos)}</div></div><div class="pf"><b>Home agency (and unit)</b>${esc(l.agency)}</div><table class="pt"><thead><tr><th style="width:110px">Date/time</th><th>Notable activities</th><th>By</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmt(e.t))}</td><td style="white-space:pre-wrap">${esc(e.text)}</td><td>${esc(e.who)}</td></tr>`).join('')||'<tr><td>&nbsp;</td><td></td><td></td></tr>'}</tbody></table>`,inc,null)}
+function iapHTML(inc,p){
+ const d=p.d,pc=n=>(inc.periods.indexOf(p)+1);
+ const inclList=IAP_ORDER.filter(k=>isInc(p,k));
+ const extras=EXTRA.filter(k=>arr(p,k).length&&isInc(p,k));
+ const ci=coverImg(inc),cv=inc.cover||{};
+ const fig=ci?`<figure class="cimg"><img src="${esc(ci)}" alt="">${cv.caption||cv.credit||cv.ai?`<figcaption>${esc(cv.caption)}${cv.credit?' <i>('+esc(cv.credit)+')</i>':''}${cv.ai?' <b>[AI-generated image]</b>':''}</figcaption>`:''}</figure>`:'';
+ const cover=`<section class="page"><div class="cover ${ci?'hasimg':''}">${fig}<h1>INCIDENT ACTION PLAN</h1><div class="big">${esc(inc.name)}</div><p>${[inc.number?'Incident # '+esc(inc.number):'',esc(inc.type),esc(inc.location),inc.jurisdiction?esc(inc.jurisdiction):'',inc.declaration?'Declaration # '+esc(inc.declaration):''].filter(Boolean).join(' &middot; ')}${inc.started?'<br>Incident began '+fmt(inc.started):''}</p><p><b>Operational Period ${pc()}</b><br>${fmt(p.from)} to ${fmt(p.to)}</p><p>Prepared by: ${esc(d.f202.prepName)} ${esc(d.f202.prepPos)}<br>Approved by Incident Commander: ${esc(d.f202.apprName)} ${d.f202.apprDT?'('+fmt(d.f202.apprDT)+')':''}</p><ul>${inclList.map(k=>`<li>${SCHEMA[k].n} - ${SCHEMA[k].t}${k==='f204'?' ('+d.f204.length+')':''}</li>`).join('')}${extras.map(k=>`<li>${SCHEMA[k].n} - ${SCHEMA[k].t} (${arr(p,k).length})</li>`).join('')}${isInc(p,'map')?'<li>Map / Chart (attached)</li>':''}${isInc(p,'wx')?'<li>Weather forecast (attached)</li>':''}</ul></div></section>`;
+ let h=cover;
+ inclList.forEach(k=>{if(k==='f204')d.f204.forEach(i=>h+=formPage(k,inc,p,i));else h+=formPage(k,inc,p)});
+ extras.forEach(k=>arr(p,k).forEach(i=>h+=formPage(k,inc,p,i)));
+ return h}
+function checks(inc,p){const d=p.d,o=[];
+ if(!(d.f202.objectives||[]).some(x=>x.trim()))o.push('ICS 202: no objectives entered');
+ if(!isFilled(rowOf(p,rk('Command','Incident Commander(s)'))))o.push('ICS 203: Incident Commander not identified as Filled');
+ if(!isFilled(rowOf(p,rk('Operations Section','Chief'))))o.push('ICS 203: no Operations Section Chief filled (who owns the 204s?)');
+ const ch=hasData((d.f205||{}).ch);
+ if(ch&&!isFilled(rowOf(p,COML)))o.push('Radio plan exists but no COML is filled - who is managing communications?');
+ if(!ch)o.push('ICS 205: no channels defined'+(isFilled(rowOf(p,COML))?' (ask the COML)':''));
+ if(!d.f204.some(hasData))o.push('ICS 204: no assignment lists entered');
+ if(!hasData((d.f206||{}).hosp))o.push('ICS 206: no hospitals listed');
+ if(!((d.f208||{}).msg||'').trim())o.push('ICS 208: no safety message');
+ const chkSig=(k,x)=>SIGKEYS.forEach(s=>{if(x&&x[s+'_sig']&&sigStale(x,x[s+'_sig']))o.push('Edited after signing: '+SCHEMA[k].n+' ('+s+') - re-sign')});
+ IAP_ORDER.forEach(k=>{if(d[k]&&!Array.isArray(d[k]))chkSig(k,d[k])});INST.forEach(k=>arr(p,k).forEach(x=>chkSig(k,x)));
+ if(!d.f202.apprName)o.push('ICS 202: not yet approved by the Incident Commander');
+ return o}
+
+/* ---------- views ---------- */
+function ownerBanner(k,p){const ow=OWNER[k];if(!ow)return '';
+ const r=rowOf(p,ow[0]),pos=ow[0].split('|')[1].replace('Chief','Chief'),sec=ow[0].split('|')[0];
+ const label=(sec==='Command'||pos.includes('(COML)')||pos.includes('Unit')||pos.includes('Officer'))?pos:sec.replace(' Section','')+' '+pos;
+ if(isFilled(r))return `<div class="ask"><b>Ask: ${esc(label)}</b> &mdash; ${esc(r.n)}${r.a?' ('+esc(r.a)+')':''}${r.c?' &middot; '+esc(r.c):''}</div>`;
+ const st=effStatus(r);
+ return `<div class="ask bad"><b class="w">${esc(label)}: ${esc(st==='Filled'?'name missing':st)}.</b> ${esc(ow[1])} <button data-act="go" data-f="f203" style="margin-left:6px">Set staffing in ICS 203</button></div>`}
+function renderSide(){
+ const inc=curInc();
+ let h=`<div class="brand">IAP Builder<small>FEMA ICS forms &middot; works offline</small></div>
+ <div class="blk"><label class="lbl">Incident</label><select id="incSel">${S.incidents.map(i=>`<option value="${i.id}" ${i.id===S.cur?'selected':''}>${esc(i.name)}</option>`).join('')||'<option>(none)</option>'}</select>
+ <div class="row"><button data-act="newInc" class="pri">+ New</button>${inc?'<button data-act="editInc">Edit</button><button data-act="delInc" class="danger">Delete</button>':''}</div></div>`;
+ if(!inc){$('#side').innerHTML=h;return}
+ const p=curP();
+ h+=`<div class="blk"><label class="lbl">Operational period</label><select id="perSel">${inc.periods.map((x,i)=>`<option value="${i}" ${i===inc.pi?'selected':''}>Period ${i+1}: ${fmt(x.from)}${x.status==='approved'?' (approved)':''}</option>`).join('')}</select><div class="row"><button data-act="newPer" class="pri">+ Next period</button></div></div>`;
+ const nv=(f,t,s,dot,extra)=>`<button class="nav ${!ui.preview&&ui.form===f&&!extra?'on':''}" data-act="go" data-f="${f}"><i class="dot ${dot}"></i>${t}<span>${s}</span></button>`;
+ h+=`<label class="lbl">Incident-level</label>`+nv('f201','ICS 201','Briefing',hasData(inc.brief)?'part':'')+nv('f214','ICS 214','Activity log',(inc.log||[]).length?'part':'')+nv('cover','Cover page','Front image',coverImg(inc)?'part':'');
+ h+=`<label class="lbl">Period ${inc.pi+1} - IAP forms</label>`;
+ IAP_ORDER.forEach(k=>{const s=SCHEMA[k];
+  if(k==='f204'){h+=nv(k,s.n,s.t,hasData(arr(p,k))?'part':'');h+=subs(k,p)}
+  else h+=nv(k,s.n,s.t,s.auto?'auto':hasData(p.d[k])?'part':'')});
+ h+=`<label class="lbl">As needed (add as many as required)</label>`;
+ EXTRA.forEach(k=>{const s=SCHEMA[k],n=arr(p,k).length;h+=`<div style="display:flex;align-items:center"><div style="flex:1;min-width:0">${nv(k,s.n,s.t+(n?' ('+n+')':''),n?'part':'')}</div><button data-act="addInst" data-f="${k}" title="Add ${s.n}" style="min-height:30px;padding:2px 9px">+</button></div>`;h+=subs(k,p)});
+ const nc=checks(inc,p).length;
+ h+=`<div class="blk" style="margin-top:14px"><button class="nav ${ui.preview?'on':''}" data-act="preview"><i class="dot ${nc?'':'part'}"></i>Preview / Print IAP<span>${nc?nc+' open items':'ready'}</span></button></div>
+ <div class="blk"><label class="lbl">Preparers</label><label class="chk"><input type="checkbox" id="remSet" ${remOn()?'checked':''}>Remember &quot;Prepared by&quot; per form</label><button data-act="forgetPrep" style="margin-top:4px">Forget remembered</button></div>
+ <div class="blk"><label class="lbl">E-signatures</label><button data-act="sigMgr">Manage signatures (${(S.sigs||[]).length})</button></div>
+ <div class="blk"><label class="lbl">Data</label><div class="row"><button data-act="export">Export backup</button><button data-act="import">Import</button></div><p class="mut" style="font-size:12px">Saved only in this browser. Export a backup regularly and before moving to another device.</p></div>`;
+ $('#side').innerHTML=h}
+function subs(k,p){const l=arr(p,k);let h=l.map((x,i)=>`<button class="nav sub ${!ui.preview&&ui.form===k&&ui.inst===x.id?'on':''}" data-act="go" data-f="${k}" data-inst="${x.id}">${esc(instLabel(k,x,i))}</button>`).join('');
+ if(k==='f204')h+=`<button class="nav sub" data-act="addInst" data-f="f204">+ Add assignment list</button>`;return h}
+function renderMain(){
+ const inc=curInc(),m=$('#main'),y=scrollY;
+ if(!inc){m.innerHTML=`<div class="empty"><h2>Incident Action Plan Builder</h2><p>Create an incident to begin. Fill in ICS forms as information comes in, then start the next operational period and carry the plan forward.</p><button class="pri" data-act="newInc">+ New incident</button></div>`;return}
+ const p=curP(),locked=p.status==='approved',n=inc.pi+1;
+ let h=`<div class="top"><div class="grow"><b>${esc(inc.name)}</b> <span class="mut">${inc.number?'#'+esc(inc.number):'(no incident #)'}</span><br><span class="mut" style="font-size:13px">${[inc.type,inc.location,inc.jurisdiction,inc.declaration?'Decl. '+inc.declaration:'',inc.started?'Began '+fmt(inc.started):''].filter(Boolean).map(esc).join(' &middot; ')||'<a href="#" data-act="editInc">Add incident type, location, jurisdiction, declaration #</a>'}</span><br><span class="mut">Operational Period ${n}: ${fmt(p.from)} to ${fmt(p.to)}</span></div><span class="pill ${locked?'ok':'warn'}">${locked?'APPROVED '+fmt(p.approvedAt):'DRAFT'}</span><button data-act="editPer">Edit times</button><button data-act="approve" class="${locked?'':'pri'}">${locked?'Unlock':'Mark approved'}</button><span class="mut" id="saved" style="font-size:12px"></span></div>`;
+ if(ui.preview){
+  const c=checks(inc,p);
+  h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><h2 style="flex:1">IAP Preview</h2><button class="pri" data-act="printIAP">Print / Save as PDF</button></div>`;
+  h+=c.length?`<div class="alert"><b>${c.length} open item${c.length>1?'s':''} before this IAP is ready:</b><ul>${c.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:`<div class="alert" style="border-color:var(--ok)"><b>All core checks pass.</b></div>`;
+  h+=iapHTML(inc,p)}
+ else if(ui.form==='cover'){
+  const cv=inc.cover=inc.cover||{},img=coverImg(inc);
+  h+=`<div style="display:flex;gap:10px;align-items:center"><div style="flex:1"><h2>Cover page</h2><span class="mut">Image shown at the top of the front page of every IAP for this incident</span></div><button data-act="preview">Preview IAP</button></div>
+  <div class="card"><label class="drop" id="drop" for="coverFile"><b>${img?'Replace image':'Add an image'}</b><br>Click to choose a picture, drag one here, or paste from the clipboard (Ctrl+V).<br><span style="font-size:12px">Photos and AI-generated images both work (JPG, PNG, WebP). Large images are resized to keep the plan lightweight.</span></label><input type="file" id="coverFile" accept="image/*" hidden>
+  ${img?`<img class="cvprev" src="${esc(img)}" alt="Cover image preview"><div class="mut" style="text-align:center;font-size:12px">${esc(cv.name||'')}${cv.size?' &middot; '+cv.size:''}</div>`:''}
+  <div class="grid2" style="margin-top:14px"><label class="f"><span>Caption (optional)</span><input data-p='["caption"]' value="${esc(cv.caption)}" placeholder="e.g. Flooding on Main Street, 05 Oct 2026"></label><label class="f"><span>Photo credit / source (optional)</span><input data-p='["credit"]' value="${esc(cv.credit)}" placeholder="e.g. Pope County EM"></label></div>
+  <label class="chk"><input type="checkbox" id="coverAI" ${cv.ai?'checked':''}>This image is AI-generated (prints an &quot;AI-generated image&quot; label)</label>
+  ${img?'<div class="row"><button class="danger" data-act="coverRemove">Remove image</button></div>':''}</div>`}
+ else if(ui.form==='f214'){
+  inc.logger=inc.logger||{};inc.log=inc.log||[];
+  h+=`<div style="display:flex;gap:10px;align-items:center"><div style="flex:1"><h2>ICS 214 Activity Log</h2><span class="mut">Ongoing, timestamped record of notable activities</span></div><button data-act="printLog">Print log</button></div>
+  <div class="card"><div class="grid2"><label class="f"><span>Name</span><input data-p='["logger","name"]' value="${esc(inc.logger.name)}"></label><label class="f"><span>ICS position</span><input data-p='["logger","pos"]' value="${esc(inc.logger.pos)}"></label></div>
+  <label class="f"><span>New entry</span><textarea id="logNew" placeholder="What happened? (Ctrl+Enter to add)"></textarea></label><div class="row" style="align-items:center"><input type="datetime-local" id="logT" style="width:230px" value="${toLocal(new Date())}"><button class="pri" data-act="addLog">Add to log</button></div></div>
+  <div class="log">${[...inc.log].map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="e card" style="padding:10px"><input type="datetime-local" data-p='["log",${i},"t"]' value="${esc(e.t)}"><textarea rows="2" style="min-height:44px" data-p='["log",${i},"text"]'>${esc(e.text)}</textarea><button class="danger" data-act="delLog" data-i="${i}">&times;</button></div>`).join('')||'<p class="mut">No entries yet.</p>'}</div>`}
+ else{
+  const f=ui.form,s=SCHEMA[f];
+  h+=`<div style="display:flex;gap:10px;align-items:center"><div style="flex:1"><h2>${s.n} &mdash; ${s.t}</h2></div><button data-act="printForm">Print this form</button></div>`;
+  if(s.scope!=='inc')h+=ownerBanner(f,p);
+  {const m=inc.prep&&inc.prep[f],oo=curObj();
+   if(m&&oo&&remOn()&&!locked&&PREP_KEYS.some(k=>m[k]&&!oo[k]&&s.items.some(i=>i.k===k)))h+=`<div class="ask"><b>Last preparer for ${s.n}:</b> ${esc([m.prepName||m.op||m.reqName||m.fromName,m.prepPos||m.opPos||m.reqPos||m.fromPos].filter(Boolean).join(', '))} <button data-act="usePrep" style="margin-left:8px">Use for this form</button></div>`}
+  if(f==='f207'){h+=`<div class="card"><p class="mut">Generated automatically from the ICS 203 staffing roster.</p><div style="background:#fff;padding:12px;border-radius:8px">${`<div class="page" style="border:0;padding:0;max-width:none">`+orgChart(p)+`</div>`}</div></div>`}
+  else{
+   if(INST.includes(f)){
+    const l=arr(p,f);
+    if(!l.length)h+=`<div class="empty">No ${s.n} forms yet.<br><br><button class="pri" data-act="addInst" data-f="${f}">+ Add ${s.n}</button></div>`;
+    else{h+=`<div class="chips">${l.map((x,i)=>`<button class="${ui.inst===x.id?'on':''}" data-act="go" data-f="${f}" data-inst="${x.id}">${esc(instLabel(f,x,i))}</button>`).join('')}<button data-act="addInst" data-f="${f}">+ Add</button><button data-act="dupInst">Duplicate</button><button class="danger" data-act="delInst">Delete this</button></div>`;
+     if(f!=='f204')h+=`<label class="chk" style="margin-bottom:12px"><input type="checkbox" data-inc="${f}" ${isInc(p,f)?'checked':''}>Include ${s.n} forms in the printed IAP</label>`}
+   }
+   const o=curObj();
+   if(o){ensure(s.items,o);h+=`<fieldset style="border:0;padding:0;margin:0" ${locked&&s.scope!=='inc'?'disabled':''}><div class="card"><div class="grid2">${s.items.map(it=>ed(it,o,p)).join('')}</div></div></fieldset>`}
+  }
+ }
+ m.innerHTML=h;scrollTo(0,y);const sv=$('#saved');if(sv)sv.textContent=''}
+function render(){renderSide();renderMain()}
+
+/* ---------- dialog ---------- */
+function ask(title,fields,ok){
+ const d=$('#dlg');$('#dtt').textContent=title;
+ $('#dbody').innerHTML=fields.map(f=>`<label class="f"><span>${f.l}</span>${f.t==='select'?`<select name="${f.k}">${f.o.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('')}</select>`:`<input name="${f.k}" type="${f.t||'text'}" value="${esc(f.v||'')}">`}</label>`).join('');
+ d.onclose=()=>{if(d.returnValue==='ok'){const o={};fields.forEach(f=>o[f.k]=d.querySelector(`[name=${f.k}]`).value);ok(o)}d.returnValue=''};
+ d.showModal()}
+const hourNow=()=>{const d=new Date();d.setMinutes(0,0,0);return d};
+
+/* ---------- actions ---------- */
+function doPrint(html,title){const old=document.title;$('#printRoot').innerHTML=html;document.title=title||old;
+ const back=()=>{document.title=old;removeEventListener('afterprint',back)};addEventListener('afterprint',back);setTimeout(()=>print(),50)}
+const ACT={
+ newInc(){const a=hourNow(),b=new Date(a.getTime()+12*36e5);
+  ask('New incident',[{k:'name',l:'Incident name'},{k:'number',l:'Incident number (optional)'},{k:'type',l:'Incident type'},{k:'location',l:'Location'},{k:'jurisdiction',l:'Jurisdiction / agency'},{k:'declaration',l:'Declaration / disaster # (optional)'},{k:'started',l:'Incident began (date/time)',t:'datetime-local',v:toLocal(new Date())},{k:'from',l:'Operational period 1 - from',t:'datetime-local',v:toLocal(a)},{k:'to',l:'to',t:'datetime-local',v:toLocal(b)}],o=>{
+   const inc={id:uid(),name:o.name.trim()||'Unnamed incident',number:o.number,type:o.type,location:o.location,jurisdiction:o.jurisdiction,declaration:o.declaration,started:o.started,brief:{},log:[],logger:{},periods:[newPeriod(o.from,o.to)],pi:0};
+   S.incidents.push(inc);S.cur=inc.id;ui={form:'f203',inst:null,preview:false};save();render()})},
+ editInc(){const i=curInc();ask('Edit incident (prints on every form)',[{k:'name',l:'Incident name',v:i.name},{k:'number',l:'Incident number',v:i.number},{k:'type',l:'Incident type',v:i.type},{k:'location',l:'Location',v:i.location},{k:'jurisdiction',l:'Jurisdiction / agency',v:i.jurisdiction},{k:'declaration',l:'Declaration / disaster #',v:i.declaration},{k:'started',l:'Incident began (date/time)',t:'datetime-local',v:i.started}],o=>{i.name=o.name.trim()||i.name;['number','type','location','jurisdiction','declaration','started'].forEach(k=>i[k]=o[k]);save();render()})},
+ delInc(){const i=curInc();if(confirm(`Delete "${i.name}" and ALL its periods and logs? This cannot be undone. Export a backup first if unsure.`)){if(i.cover&&i.cover.imgId&&S.images)delete S.images[i.cover.imgId];S.incidents=S.incidents.filter(x=>x!==i);S.cur=S.incidents[0]&&S.incidents[0].id;save();render()}},
+ newPer(){const inc=curInc(),pv=curP();const dur=new Date(pv.to)-new Date(pv.from)||12*36e5;const to=new Date(new Date(pv.to).getTime()+dur);
+  ask('Start next operational period',[{k:'from',l:'From',t:'datetime-local',v:pv.to},{k:'to',l:'To',t:'datetime-local',v:toLocal(to)},{k:'copy',l:'Starting content',t:'select',o:[['copy','Copy forward from previous period (recommended)'],['blank','Start blank']]}],o=>{
+   const np=newPeriod(o.from,o.to);
+   if(o.copy==='copy'){np.d=JSON.parse(JSON.stringify(pv.d));INST.forEach(k=>{if(np.d[k])np.d[k].forEach(x=>x.id=uid())});['f213','f213rr','f309'].forEach(k=>np.d[k]=[]);np.d.f202.apprName='';np.d.f202.apprDT='';np.include=Object.assign({},pv.include)}
+   ['f202','f203','f205','f205a','f206','f208'].forEach(k=>{np.d[k]=np.d[k]||{};fillPrep(inc,k,np.d[k])});
+   inc.periods.push(np);inc.pi=inc.periods.length-1;ui.preview=false;save();render()})},
+ editPer(){const p=curP();ask('Operational period times',[{k:'from',l:'From',t:'datetime-local',v:p.from},{k:'to',l:'To',t:'datetime-local',v:p.to}],o=>{p.from=o.from;p.to=o.to;save();render()})},
+ approve(){const p=curP();if(p.status==='approved'){if(confirm('Unlock this approved period for editing?')){p.status='draft';delete p.approvedAt}}else{p.status='approved';p.approvedAt=toLocal(new Date());if(!p.d.f202.apprDT)p.d.f202.apprDT=p.approvedAt}save();render()},
+ go(el){ui.form=el.dataset.f;ui.preview=false;if(el.dataset.inst)ui.inst=el.dataset.inst;else if(INST.includes(ui.form)&&!arr(curP(),ui.form).find(x=>x.id===ui.inst))ui.inst=(arr(curP(),ui.form)[0]||{}).id;scrollTo(0,0);render()},
+ preview(){ui.preview=true;scrollTo(0,0);render()},
+ addInst(el){const p=curP(),f=el.dataset.f,x={id:uid()};if(SCHEMA[f].items.some(i=>i.k==='dt'&&i.t==='dt'))x.dt=toLocal(new Date());fillPrep(curInc(),f,x);arr(p,f).push(x);ui.form=f;ui.inst=x.id;ui.preview=false;save();render();scrollTo(0,0)},
+ dupInst(){const p=curP(),l=arr(p,ui.form),s=l.find(x=>x.id===ui.inst);if(!s)return;const x=JSON.parse(JSON.stringify(s));x.id=uid();const lk={f204:'div',f215:'title',f217a:'title',f213:'subject',f309:'op'}[ui.form];if(lk)x[lk]=(x[lk]||'')+' (copy)';l.push(x);ui.inst=x.id;save();render()},
+ delInst(){const p=curP();if(confirm('Delete this '+SCHEMA[ui.form].n+' form?')){p.d[ui.form]=arr(p,ui.form).filter(x=>x.id!==ui.inst);ui.inst=(p.d[ui.form][0]||{}).id;save();render()}},
+ tpl(el){const o=curObj(),t=TPL[el.dataset.tpl],ks=['sys','ch','fn','name','rxf','rxt','txf','txt','mode','rem'];
+  o.ch=(o.ch||[]).filter(hasData);t.rows.forEach(r=>{const x={};ks.forEach((k,i)=>x[k]=r[i]);o.ch.push(x)});save();render()},
+ push205(){const o=curObj(),p=curP(),rows=(o.ch||[]).filter(hasData);if(!rows.length){alert('No channels to copy yet.');return}
+  if(!confirm(`Copy ${rows.length} channel(s) into ICS 205 for this operational period? Existing ICS 205 rows are kept.`))return;
+  const f=p.d.f205;f.ch=(f.ch||[]).filter(hasData);rows.forEach(r=>f.ch.push({zone:r.sys,ch:r.ch,fn:r.fn,name:r.name,as:'',rxf:r.rxf,rxt:r.rxt,txf:r.txf,txt:r.txt,mode:r.mode,rem:r.rem}));save();render();alert('Copied. Fill in the Assignment column in ICS 205.')},
+ coverRemove(){const inc=curInc();if(confirm('Remove the cover image?')){if(inc.cover&&inc.cover.imgId&&S.images)delete S.images[inc.cover.imgId];inc.cover={caption:inc.cover&&inc.cover.caption,credit:inc.cover&&inc.cover.credit};save();render()}},
+ sigMgr(){sigShow(sigMgrHTML())},
+ sigClose(){$('#sigdlg').close()},
+ sigNew(){sg={mode:'draw',drawn:false,name:'',pos:'',typed:''};sigShow(sigNewHTML());sigCanvas()},
+ sigMode(el){sg.name=$('#sgName').value;sg.pos=$('#sgPos').value;sg.mode=el.dataset.m;sg.drawn=false;sg.typed='';sigShow(sigNewHTML());sigCanvas()},
+ sigClear(){const c=$('#sc');c.getContext('2d').clearRect(0,0,c.width,c.height);if(sg.mode==='type'){$('#sgType').value=''}sg.drawn=false;sigChk()},
+ async sigSave(){const c=$('#sc'),img=trimCanvas(c);if(!img){alert('Draw or type a signature first.');return}
+  const pin=$('#sgPin').value.trim(),g={id:uid(),name:$('#sgName').value.trim(),pos:$('#sgPos').value.trim(),img,at:toLocal(new Date()),pin:null};
+  if(pin){const salt=uid();g.pin={salt,hash:await pinHash(pin,salt)}}
+  S.sigs=S.sigs||[];S.sigs.push(g);save();sigShow(sigMgrHTML());render()},
+ sigDel(el){const g=(S.sigs||[]).find(x=>x.id===el.dataset.id);if(g&&confirm(`Delete the saved signature for ${g.name}? Forms already signed keep their copy.`)){S.sigs=S.sigs.filter(x=>x!==g);save();sigShow(sigMgrHTML());render()}},
+ async sign(el){const key=el.dataset.k,o=curObj(),sel=el.parentElement.querySelector('select'),g=(S.sigs||[]).find(x=>x.id===sel.value);if(!g||!o)return;
+  const it=SCHEMA[ui.form].items.find(i=>i.k===key);
+  if(g.pin){const pin=prompt(`Enter the PIN for ${g.name}'s signature`);if(pin===null)return;if(await pinHash(pin.trim(),g.pin.salt)!==g.pin.hash){alert('Incorrect PIN.');return}}
+  if(!confirm(`Apply the electronic signature of ${g.name}${g.pos?' ('+g.pos+')':''} to "${it.l}" on ${SCHEMA[ui.form].n}?\n\nThis records the date and time of signing.`))return;
+  if(!o[key])o[key]=g.name;
+  o[key+'_sig']={img:g.img,name:g.name,pos:g.pos,at:toLocal(new Date()),hash:fh(o)};save();render()},
+ unsign(el){const o=curObj();if(o&&confirm('Remove this signature from the form?')){delete o[el.dataset.k+'_sig'];save();render()}},
+ usePrep(){const o=curObj(),m=(curInc().prep||{})[ui.form];if(!o||!m)return;PREP_KEYS.forEach(k=>{if(m[k]&&!o[k]&&SCHEMA[ui.form].items.some(i=>i.k===k))o[k]=m[k]});save();render()},
+ forgetPrep(){if(confirm('Forget all remembered preparers for this incident? (Names already on forms stay.)')){curInc().prep={};save();render()}},
+ addrow(el){const o=curObj(),it=(SCHEMA[ui.form].items).find(i=>i.k===el.dataset.k);const r=it.t==='list'?'':{};if(it.now)r[it.cols[0].k]=toLocal(new Date());o[it.k].push(r);save();render()},
+ delrow(el){const o=curObj();o[el.dataset.k].splice(+el.dataset.i,1);save();render()},
+ addLog(){const t=$('#logNew').value.trim();if(!t)return;const inc=curInc();inc.log.push({id:uid(),t:$('#logT').value||toLocal(new Date()),text:t,who:(inc.logger&&inc.logger.name)||''});inc.log.sort((a,b)=>(a.t||'').localeCompare(b.t||''));save();render()},
+ delLog(el){if(confirm('Delete this log entry?')){curInc().log.splice(+el.dataset.i,1);save();render()}},
+ printLog(){const inc=curInc();doPrint(logPage(inc),'ICS 214 - '+inc.name+(inc.number?' #'+inc.number:''))},
+ printForm(){const inc=curInc(),p=curP();doPrint(formPage(ui.form,inc,p,INST.includes(ui.form)?arr(p,ui.form).find(x=>x.id===ui.inst):null),SCHEMA[ui.form].n+' - '+idTitle(inc,SCHEMA[ui.form].scope==='inc'?null:p).replace('IAP - ',''))},
+ printIAP(){const inc=curInc(),p=curP();doPrint(iapHTML(inc,p),idTitle(inc,p))},
+ export(){const out=(S.sigs||[]).length&&!confirm('Include the saved e-signature library in this backup?\n\nOK = include (keep the file private)\nCancel = leave the library out (signatures already on forms stay)')?Object.assign({},S,{sigs:[]}):S;const b=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='iap-backup-'+toLocal(new Date()).replace(/[:T]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},
+ import(){$('#imp').click()}
+};
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el&&ACT[el.dataset.act]){e.preventDefault();ACT[el.dataset.act](el)}});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='sgType'){drawTyped();return}if(t.id==='sgName'||t.id==='sgCons'){sigChk();return}
+ const el=e.target,p=el.getAttribute&&el.getAttribute('data-p');if(!p)return;if(el.type==='radio'&&!el.checked)return;
+ const o=curObj();if(!o)return;const pp=JSON.parse(p);setPath(o,pp,el.value);
+ if(pp.length===1&&PREP_KEYS.includes(pp[0])&&remOn()&&!ui.preview){const inc=curInc();inc.prep=inc.prep||{};(inc.prep[ui.form]=inc.prep[ui.form]||{})[pp[0]]=el.value}
+ if(el.closest('.rg')&&el.tagName!=='SELECT'){/* typing a name implies filled */const path=JSON.parse(p);if(path[2]==='n'){const r=o[path[0]][path[1]];if(!r.s)r.s='Filled'}}
+ save();renderSide()});
+document.addEventListener('change',e=>{const el=e.target;
+ if(el.dataset&&el.dataset.inc){curP().include[el.dataset.inc]=el.checked;save();renderSide();return}
+ if(el.id==='sgCons'){sigChk();return}
+ if(el.id==='coverFile'){const f=el.files[0];el.value='';if(f)setCover(f);return}
+ if(el.id==='coverAI'){curObj().ai=el.checked;save();return}
+ if(el.id==='remSet'){S.settings=S.settings||{};S.settings.rememberPrep=el.checked;save();renderMain();return}
+ if(el.id==='incSel'){S.cur=el.value;ui={form:'f202',inst:null,preview:false};save();render();return}
+ if(el.id==='perSel'){curInc().pi=+el.value;ui.inst=null;save();render();return}
+ if(el.closest&&el.closest('.rg')&&el.tagName==='SELECT')renderMain();
+ if(el.id==='imp'){const f=el.files[0];if(!f)return;f.text().then(t=>{try{const s=JSON.parse(t);if(!s.incidents)throw 0;if(!confirm(`Import ${s.incidents.length} incident(s)? Incidents with the same ID will be replaced.`))return;s.incidents.forEach(i=>{const k=S.incidents.findIndex(x=>x.id===i.id);if(k>=0)S.incidents[k]=i;else S.incidents.push(i)});S.images=Object.assign({},s.images||{},S.images||{});(s.sigs||[]).forEach(g=>{S.sigs=S.sigs||[];if(!S.sigs.some(x=>x.id===g.id))S.sigs.push(g)});S.cur=S.cur||s.cur;save();render()}catch(x){alert('That file is not a valid IAP Builder backup.')}el.value=''})}});
+document.addEventListener('paste',e=>{if(ui.form!=='cover'||ui.preview||!curInc())return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/'));if(it){e.preventDefault();setCover(it.getAsFile())}});
+document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d){e.preventDefault();d.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d)d.classList.remove('over')});
+document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d){e.preventDefault();d.classList.remove('over');const f=e.dataTransfer.files[0];if(f)setCover(f)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&e.target.id==='logNew')ACT.addLog()});
+if(!curInc())S.cur=S.incidents[0]&&S.incidents[0].id;
+render();
+</script>
+</body>
+</html>
