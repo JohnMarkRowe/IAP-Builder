@@ -8,7 +8,7 @@ IAP Builder is a single HTML file (`index.html`). There is nothing to install an
 
 ### Quick start
 
-1. **+ New incident.** Enter the incident name, number, type, location, jurisdiction/agency, declaration number, when it began, and the first operational period. These print in the header of every form, in every page footer, and in the PDF filename.
+1. **+ New incident.** Enter the incident name, number, type, location, jurisdiction/agency, declaration number, when it began, whether it is a real event or an exercise, and the first operational period. These print in the header of every form, in every page footer, and in the PDF filename.
 2. **Fill in ICS 203 first.** Mark each position *Filled*, *Not activated*, or *Needed - unfilled* and enter a name, agency and contact. Every other form then shows an **Ask:** banner naming who owns that information (for example the COML for ICS 205/205A/217A/309). If the owner is not filled, the banner says so and names the fallback.
 3. **Work through the forms as information comes in.** Everything autosaves as you type.
 4. **Preview / Print IAP** shows the assembled plan and a list of open items (no objectives, no COML, no hospitals, edited-after-signing, and so on). **Print / Save as PDF** uses the browser's print dialog.
@@ -48,6 +48,7 @@ On any ICS 217A, template buttons add rows, and **Copy these channels into ICS 2
 ### Other features
 
 - **Multiple operational periods** per incident, and multiple incidents.
+- **Exercise marking.** In the New/Edit incident dialog, choose "EXERCISE / training" (and optionally name the exercise). Every printed page, the cover, and the screen preview then carry an "EXERCISE - NOT A REAL EVENT" banner at the top and bottom, the top bar shows an EXERCISE badge, and the PDF filename starts with "EXERCISE". Switch it off to treat the incident as a real event.
 - **Remember "Prepared by" per form** (sidebar toggle). New forms and periods are pre-filled with the last preparer for that form; existing forms offer a one-click "use last preparer". Approvals are never remembered.
 - **E-signatures** (sidebar). Draw or type a signature, optionally protect it with a PIN, then click **Sign** next to a signature field. Each signature is time-stamped. If the form body is edited afterwards, the signature is flagged on screen, in print, and in the readiness checks.
 - **Backup / restore:** Export backup and Import in the sidebar (includes the image library).
@@ -67,7 +68,6 @@ Everything is stored in **your browser's local storage on your device**. Nothing
 - No shared or multi-user editing.
 - Print layout depends on the browser's print engine; review the PDF before distributing.
 - Reference data (NIFOG, ABIT) is a snapshot. It is a planning aid, not an authoritative source.
-- Exercise incidents are not specially marked on printed pages.
 
 ## License
 
