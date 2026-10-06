@@ -2,13 +2,15 @@ Builds, maintains, allows printing, an Incident Action Plan.  It is fairly speci
 
 **Live app:** https://johnmarkrowe.github.io/IAP-Builder/
 
+**[Try the demo](https://johnmarkrowe.github.io/IAP-Builder/?demo=1)** - opens the app with a fully filled-in, fictional exercise already loaded (nothing to set up, nothing sent anywhere).
+
 ## Usage notes
 
 IAP Builder is a single HTML file (`index.html`). There is nothing to install and no server: open the live link, or download the file and open it in a current browser (Chrome, Edge, Firefox, Safari). It works offline once loaded.
 
 ### Quick start
 
-**Want to see it first?** Click **Demo** in the sidebar (or **Load a demo incident** on the start screen). It loads a fully filled-in, fictional flood exercise ("DEMO - Riverbend Flood", Example County) with two operational periods, a signed and approved period 1, a staffed ICS 203 roster, a radio plan, an exercise banner, a cover image and an attachment map. All names, agencies and phone numbers are made up. Loading it again replaces the previous demo; your real incidents are never touched, and deleting the demo removes its sample images.
+**Want to see it first?** Use the [Try the demo](https://johnmarkrowe.github.io/IAP-Builder/?demo=1) link, or click **Demo** in the sidebar (or **Load a demo incident** on the start screen). It loads a fully filled-in, fictional flood exercise ("DEMO - Riverbend Flood", Example County) with two operational periods, a signed and approved period 1, a staffed ICS 203 roster, a radio plan, an exercise banner, a cover image and an attachment map. All names, agencies and phone numbers are made up. Loading it again replaces the previous demo; your real incidents are never touched, and deleting the demo removes its sample images.
 
 1. **+ New incident.** Enter the incident name, number, type, location, jurisdiction/agency, declaration number, when it began, whether it is a real event, an exercise, or training, and the first operational period. These print in the header of every form, in every page footer, and in the PDF filename. For practice sessions, use the **Exercise** or **Training** button beside **+ New** to start a blank incident that is already marked accordingly.
 2. **Fill in ICS 203 first.** Mark each position *Filled*, *Not activated*, or *Needed - unfilled* and enter a name, agency and contact. Every other form then shows an **Ask:** banner naming who owns that information (for example the COML for ICS 205/205A/217A/309). If the owner is not filled, the banner says so and names the fallback.
