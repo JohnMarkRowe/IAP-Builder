@@ -12,6 +12,32 @@ IAP Builder is a single HTML file (`index.html`). There is nothing to install an
 
 **Phone-friendly.** The layout adapts to phones and tablets: forms stack into a single column, wide tables (such as the radio plan) scroll sideways inside their own box instead of stretching the page, and the guided tour moves its card to the bottom or top of the screen. This was checked at a 375 x 812 phone size in a browser emulator, not yet on physical devices, so please report anything odd. For long entries and printing, a tablet or computer is more comfortable.
 
+### How to install on a phone
+
+There is no app-store version. IAP Builder is a web page, and "installing" it means adding a **shortcut to your home screen** so it opens full screen like an app. You need a connection the first time you open it.
+
+**iPhone / iPad (Safari)**
+
+1. Open <https://johnmarkrowe.github.io/IAP-Builder/> in **Safari** (not inside another app's built-in browser).
+2. Tap the **Share** button (the square with an arrow).
+3. Scroll down and tap **Add to Home Screen**, then **Add**.
+
+**Android (Chrome)**
+
+1. Open <https://johnmarkrowe.github.io/IAP-Builder/> in **Chrome**.
+2. Tap the **three-dot menu** at the top right.
+3. Tap **Add to Home screen** (on some versions **Install app**), then **Add**.
+
+**Things to know**
+
+- **Pick one place to work.** On iPhone/iPad the Home Screen icon keeps its **own storage, separate from Safari**, so incidents you started in Safari will not appear in the icon (and the other way round). On Android the shortcut normally shares Chrome's storage. To move an incident between places or devices, use **Export backup** and **Import** (sidebar), for example by sending the backup file to yourself.
+- **Your data stays on the phone**, in the browser's storage. Nothing is uploaded. Private/incognito windows do not keep it.
+- **Back up regularly.** Safari can clear a website's stored data after about a week of not using it in the browser; the Home Screen icon is generally not affected, but export a backup anyway, especially during an active incident.
+- **Offline use is not guaranteed.** The shortcut opens the website; the page is not set up as an offline-capable installed app. Open it at least once with a connection, and before going into the field check that it opens in airplane mode. If you will have no signal, work on a laptop or tablet with the file saved (download `index.html` from this repository and open it in a browser).
+- **Updates are automatic.** The shortcut loads the current version from the website each time you are online.
+- **To remove it,** delete the icon like any app. Your saved incidents stay in the browser's site data until you clear it.
+- On a phone, long entries and printing are more comfortable on a tablet or computer; use **Preview / Print IAP** then save as PDF or print from your device's share/print option.
+
 ### Quick start
 
 **Want to see it first?** Use the [Try the demo](https://johnmarkrowe.github.io/IAP-Builder/?demo=1) link, or click **Demo** in the sidebar (or **Load a demo incident** on the start screen). It loads a fully filled-in, fictional flood exercise ("DEMO - Riverbend Flood", Example County) with two operational periods, a signed and approved period 1, a staffed ICS 203 roster, a radio plan, an exercise banner, a cover image and an attachment map. All names, agencies and phone numbers are made up. Loading it again replaces the previous demo; your real incidents are never touched, and deleting the demo removes its sample images. For a step-by-step explanation, click **Tour** (next to **Demo**) for the [guided tour](https://johnmarkrowe.github.io/IAP-Builder/?tour=1).
