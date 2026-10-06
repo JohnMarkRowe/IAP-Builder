@@ -81,6 +81,9 @@ table.pt th,table.pt td{border:1px solid #000;padding:3px 5px;text-align:left;ve
 .sglist{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px}.sglist img{height:46px;background:#fff;border-radius:4px;padding:2px}
 .drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:26px 14px;text-align:center;cursor:pointer;color:var(--mut)}.drop.over,.drop:hover{border-color:var(--acc);color:var(--ink)}
 .cvprev{max-width:100%;max-height:340px;display:block;margin:12px auto;border-radius:6px;border:1px solid var(--line)}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.lcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.lcard img{width:100%;height:150px;object-fit:contain;background:#fff;border-radius:6px;border:1px solid var(--line)}
+.attimg img{max-width:100%;max-height:7.4in;object-fit:contain;display:block;margin:6px auto}.attimg .acap{font-size:9pt;text-align:center}
 .cimg{margin:0 0 18px}.cimg img{max-width:100%;max-height:4.4in;object-fit:contain;display:block;margin:0 auto}.cimg figcaption{font-size:9pt;margin-top:5px;text-align:center}
 .cover.hasimg{padding-top:0}.cover.hasimg h1{font-size:26pt}
 .sigimg{height:42px;display:block;margin-top:3px}.sigmeta{font-size:8pt}
@@ -226,9 +229,14 @@ const SCHEMA={
   T('op','Radio operator - Name',{half:1}),T('opPos','Position / station ID',{half:1}),
   {k:'log',l:'Communications log',t:'table',min:8,now:1,cols:[C('t','Time',{t:'dt'}),C('to','To (name / ID)'),C('from','From (name / ID)'),C('msg','Message')]},
   T('prepName','Prepared by - Name',{half:1}),T('dt','Date/time',{t:'dt',half:1})]}
+ ,fatt:{n:'Image',t:'Attachment',inst:1,items:[
+  T('title','Attachment title (e.g. "Operations map", "Exercise scenario photo")'),
+  {k:'img',l:'Image',t:'imgpick'},
+  T('caption','Caption (optional)',{noprint:1}),T('credit','Credit / source (optional)',{noprint:1}),
+  {k:'ai',l:'This image is AI-generated (prints an "AI-generated image" label)',t:'check'}]}
 };
 const IAP_ORDER=['f202','f203','f204','f205','f205a','f206','f207','f208'];
-const EXTRA=['f215','f217a','f213','f213rr','f309'];
+const EXTRA=['f215','f217a','f213','f213rr','f309','fatt'];
 const INST=['f204',...EXTRA];
 const INC_DEFAULT={map:false,wx:false,f213:false,f213rr:false,f309:false};
 const arr=(p,k)=>p.d[k]||(p.d[k]=[]);
@@ -280,22 +288,37 @@ function sigCanvas(){const c=$('#sc'),x=c.getContext('2d');x.lineWidth=3;x.lineC
 function drawTyped(){const c=$('#sc'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);const t=($('#sgType')||{}).value||'';sg.drawn=t.trim()!=='';
  x.fillStyle='#111';x.font='italic 76px "Segoe Script","Brush Script MT","Lucida Handwriting",cursive';x.textBaseline='middle';x.fillText(t,20,100,560);sigChk()}
 function sigChk(){const b=$('#sgSave');if(b)b.disabled=!(sg.drawn&&($('#sgName')||{}).value.trim()&&$('#sgCons').checked)}
+/* ---------- image library ---------- */
+function imgRefs(id){let n=(S.lib||[]).filter(l=>l.imgId===id).length;S.incidents.forEach(i=>{if(i.cover&&i.cover.imgId===id)n++;i.periods.forEach(p=>(p.d.fatt||[]).forEach(a=>{if(a.img===id)n++}))});return n}
+const gcImg=id=>{if(id&&S.images&&imgRefs(id)===0)delete S.images[id]};
+async function addImage(file,max){const r=await loadImage(file,max);S.images=S.images||{};const id=uid();S.images[id]=r.url;return{id,r}}
+const imgInfo=r=>r.w+' x '+r.h+' px, '+Math.round(r.url.length*.75/1024)+' KB';
+async function libAdd(files,max){let bad=[];for(const f of files){try{const{id,r}=await addImage(f,max);S.lib=S.lib||[];S.lib.push({id:uid(),imgId:id,title:(f.name||'pasted image').replace(/\.[^.]+$/,''),tags:'',notes:'',at:toLocal(new Date()),size:imgInfo(r)})}catch(e){bad.push((f.name||'file')+': '+e)}}
+ save();render();if(bad.length)alert(bad.join('\n'))}
+function storageMB(){try{return JSON.stringify(S).length/1e6}catch(e){return 0}}
+function libHTML(){const l=S.lib||[],mb=storageMB(),pct=Math.min(100,Math.round(mb/5*100));
+ return `<div style="padding-top:14px"><h2>Image library</h2><p class="mut">Reusable images for exercise and reference IAPs: scenario photos, maps, injects, charts. They live on this device and can be used in any incident as the cover image or as a printed attachment page.</p>
+ <div class="card"><label class="drop" id="libdrop" for="libFile"><b>Add images</b><br>Click to choose (you can select several), drag them here, or paste from the clipboard (Ctrl+V).</label><input type="file" id="libFile" accept="image/*" multiple hidden>
+ <div class="row" style="align-items:center"><label class="mut" style="font-size:13px">Detail:&nbsp;<select id="libQ" style="width:auto"><option value="1600">Standard (1600 px)</option><option value="2400">High detail - maps (2400 px, larger)</option><option value="1000">Small (1000 px)</option></select></label></div>
+ <p class="mut" style="font-size:12px;margin:10px 0 4px">Browser storage used by the whole app: ${mb.toFixed(1)} MB of roughly 5 MB${pct>80?' <b style="color:var(--warn)">&mdash; nearly full. Delete unused images or export a backup.</b>':''}</p><div style="height:6px;background:var(--line);border-radius:4px"><div style="height:6px;width:${pct}%;background:${pct>80?'var(--warn)':'var(--acc)'};border-radius:4px"></div></div></div>
+ <label class="f"><span>Filter</span><input id="libFilter" placeholder="Search title, tags, notes"></label>
+ ${l.length?`<div class="lgrid">${l.map((it,i)=>`<div class="lcard" data-q="${esc((it.title+' '+it.tags+' '+it.notes).toLowerCase())}"><img src="${esc((S.images||{})[it.imgId]||'')}" alt=""><input data-p='["lib",${i},"title"]' value="${esc(it.title)}" placeholder="Title"><input data-p='["lib",${i},"tags"]' value="${esc(it.tags)}" placeholder="Tags (e.g. flood, map, exercise)"><textarea data-p='["lib",${i},"notes"]' rows="2" style="min-height:44px" placeholder="Notes / source / inject info">${esc(it.notes)}</textarea><div class="mut" style="font-size:11px">${esc(it.size||'')} &middot; ${imgRefs(it.imgId)-1>0?'used in '+(imgRefs(it.imgId)-1)+' place(s)':'not in use'}</div><div class="row"><button data-act="libCover" data-id="${it.id}">Use as cover</button><button data-act="libAtt" data-id="${it.id}">Add as attachment page</button><button class="danger" data-act="libDel" data-id="${it.id}">Delete</button></div></div>`).join('')}</div>`:'<p class="mut">The library is empty.</p>'}</div>`}
 /* ---------- cover image ---------- */
 const coverImg=inc=>inc.cover&&inc.cover.imgId&&S.images&&S.images[inc.cover.imgId]||'';
-function loadImage(file){return new Promise((res,rej)=>{if(!file||!/^image\//.test(file.type)){rej('That is not an image file.');return}
+function loadImage(file,max){return new Promise((res,rej)=>{if(!file||!/^image\//.test(file.type)){rej('That is not an image file.');return}
  const fr=new FileReader();fr.onerror=()=>rej('Could not read the file.');
  fr.onload=()=>{const im=new Image();im.onerror=()=>rej('Could not decode that image.');
-  im.onload=()=>{const M=1600,s=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
+  im.onload=()=>{const M=max||1600,s=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);res({url:c.toDataURL('image/jpeg',0.85),w:c.width,h:c.height})};
   im.src=fr.result};fr.readAsDataURL(file)})}
 async function setCover(file){try{const r=await loadImage(file),inc=curInc();S.images=S.images||{};
- if(inc.cover&&inc.cover.imgId)delete S.images[inc.cover.imgId];
- const id=uid();S.images[id]=r.url;inc.cover=Object.assign(inc.cover||{},{imgId:id,name:file.name||'pasted image',size:r.w+' x '+r.h+' px, '+Math.round(r.url.length*.75/1024)+' KB'});
+ const old=inc.cover&&inc.cover.imgId;
+ const id=uid();S.images[id]=r.url;inc.cover=Object.assign(inc.cover||{},{imgId:id,name:file.name||'pasted image',size:r.w+' x '+r.h+' px, '+Math.round(r.url.length*.75/1024)+' KB'});gcImg(old);
  ui.form='cover';ui.preview=false;save();render()}catch(e){alert(e)}}
 const PREP_KEYS=['prepName','prepPos','op','opPos','reqName','reqPos','reqContact','fromName','fromPos'];
 const remOn=()=>!(S.settings&&S.settings.rememberPrep===false);
 function fillPrep(inc,f,o){const m=inc.prep&&inc.prep[f];if(!m||!remOn())return;PREP_KEYS.forEach(k=>{if(m[k]&&!o[k]&&SCHEMA[f].items.some(i=>i.k===k))o[k]=m[k]})}
-const instLabel=(k,x,i)=>{const v={f204:x.div||x.branch,f213:x.subject,f213rr:((x.items||[])[0]||{}).kind||x.reqNo,f215:x.title,f217a:x.title,f309:x.op}[k];return v||SCHEMA[k].n+' #'+(i+1)};
+const instLabel=(k,x,i)=>{const v={f204:x.div||x.branch,f213:x.subject,f213rr:((x.items||[])[0]||{}).kind||x.reqNo,f215:x.title,f217a:x.title,f309:x.op,fatt:x.title}[k];return v||SCHEMA[k].n+' #'+(i+1)};
 const nf=(sys,ch,fn,rxf,rxt,txf,txt,mode,rem)=>[[sys,ch,fn,ch,rxf,rxt,txf,txt,mode,rem]];
 const TPL={
  nifog_vhf:{l:'NIFOG VHF simplex (VCALL10, VTAC11-14)',rows:[
@@ -390,8 +413,12 @@ TPL.nifog_deptg={l:'NIFOG deployable trunked talkgroups (YY + ZZ zones)',rows:((
  Z.forEach(([z,zn,names])=>{const rows=names.map((nm,i)=>{const n=nrow[nm];const sys='AWIN ABIT '+z+' ('+zn+')',ch=z+'-'+(i+1);
    return n?[sys,ch,zn,nm,n[4],n[5],n[6],n[7],n[8],'NIFOG interoperability channel (ABIT '+z+')']:[sys,ch,zn,nm,'','','','','D','AWIN P25 trunked talkgroup; TG ID per AWIN'];});
   TPL['abit_'+z.toLowerCase()]={l:z+' '+zn+' ('+rows.length+')',rows};all.push(...rows)});
- all.push(['AWIN ABIT Z9 (AGENCY)','Z9-1','AGENCY','Agency-specific talkgroups (enter)','','','','','D','Z9 is left for each agency in the ABIT']);
- TPL.abit_all={l:'AWIN ABIT - full template (Z1-Z8)',rows:all}})();
+ const z9=Array.from({length:6},(_,i)=>['AWIN ABIT Z9 (AGENCY)','Z9-'+(i+1),'AGENCY','Agency talkgroup '+(i+1)+' (enter name)','','','','','D','Z9 is left empty in the ABIT for agency use; enter TG name/ID']);
+ TPL.abit_z9={l:'Z9 AGENCY - spare (6)',rows:z9};
+ const ex=Array.from({length:10},(_,i)=>['AWIN EXERCISE / TRAINING','EX-'+(i+1),'Exercise / training','Exercise-training TG '+(i+1)+' (enter name)','','','','','D','Spare for a NEW exercise/training talkgroup: enter name + TG ID once AWIN has created and programmed it']);
+ TPL.abit_exer={l:'Exercise / training talkgroups - spare (10)',rows:ex};
+ all.push(...z9,...ex);
+ TPL.abit_all={l:'AWIN ABIT - full template (Z1-Z8) + Z9 + exercise/training spares',rows:all}})();
 const isInc=(p,k)=>k in p.include?p.include[k]:(INC_DEFAULT[k]!==undefined?INC_DEFAULT[k]:true);
 
 /* ---------- state ---------- */
@@ -409,6 +436,7 @@ function newPeriod(from,to){return{id:uid(),from,to,status:'draft',include:{},d:
 function curObj(){const inc=curInc(),p=curP(),f=ui.form;
  if(f==='f214')return inc;
  if(f==='cover')return inc.cover=inc.cover||{};
+ if(f==='imglib')return S;
  if(INST.includes(f))return arr(p,f).find(x=>x.id===ui.inst);
  return SCHEMA[f].scope==='inc'?inc.brief:p.d[f]}
 function ensure(items,o){items.forEach(it=>{
@@ -436,7 +464,9 @@ function ed(it,o,p){
  case 'list':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span>${v.map((x,i)=>`<div class="row" style="flex-wrap:nowrap;align-items:center"><b style="width:22px">${i+1}.</b><textarea rows="2" style="min-height:44px" data-p="${P([it.k,i])}">${esc(x)}</textarea><button class="danger" data-act="delrow" data-k="${it.k}" data-i="${i}" title="Remove">&times;</button></div>`).join('')}<button data-act="addrow" data-k="${it.k}" style="margin-top:6px">+ Add objective</button></div>`;
  case 'table':return `<div style="grid-column:1/-1;margin-bottom:10px"><span class="cap">${it.l}</span><div class="tw"><table class="et"><thead><tr>${it.cols.map(c=>`<th>${c.l}</th>`).join('')}<th></th></tr></thead><tbody>${v.map((r,i)=>`<tr>${it.cols.map(c=>`<td>${cell(c,(r||{})[c.k],[it.k,i,c.k])}</td>`).join('')}<td><button class="danger" data-act="delrow" data-k="${it.k}" data-i="${i}" title="Remove row">&times;</button></td></tr>`).join('')}</tbody></table></div><button data-act="addrow" data-k="${it.k}">+ Add row</button></div>`;
  case 'roster':return `<div style="grid-column:1/-1">${ROSTER.map(g=>`<h3 style="margin:16px 0 6px;font-size:15px">${g.g}</h3><div class="rg h"><span>Position</span><span>Status</span><span>Name</span><span>Agency</span><span>Contact</span></div>${g.rows.map(pos=>{const k=rk(g.g,pos),r=v[k]||{};const cl=k===COML?'coml':'';return `<div class="rg"><span class="pos ${cl}">${esc(pos)}</span><select data-p="${P([it.k,k,'s'])}">${STATUS.map(s=>`<option ${effStatus(r)===s?'selected':''}>${s}</option>`).join('')}</select><input placeholder="Name" data-p="${P([it.k,k,'n'])}" value="${esc(r.n)}"><input placeholder="Agency" data-p="${P([it.k,k,'a'])}" value="${esc(r.a)}"><input placeholder="Phone / radio" data-p="${P([it.k,k,'c'])}" value="${esc(r.c)}"></div>`}).join('')}`).join('')}</div>`;
- case 'tpl':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span><div class="row">${Object.entries(TPL).filter(([k])=>!k.startsWith('abit')).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><span class="cap" style="margin-top:10px">AWIN ABIT (Arkansas Basic Interoperability Template, July 2018)</span><div class="row"><button data-act="tpl" data-tpl="abit_all" class="pri">+ ${esc(TPL.abit_all.l)}</button>${Object.entries(TPL).filter(([k])=>/^abit_z/.test(k)).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><div class="row"><button data-act="push205" class="pri">Copy these channels into ICS 205</button></div></div>`;
+ case 'imgpick':{const u=(S.images||{})[v];return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span>${u?`<img class="cvprev" src="${esc(u)}" alt="">`:'<p class="mut">No image selected.</p>'}<div class="row"><button data-act="pickImg" data-t="att">Choose from library</button><label class="drop" style="display:inline-block;padding:7px 12px;border-style:solid" for="attFile">Upload new (also saves to library)</label><input type="file" id="attFile" accept="image/*" hidden></div></div>`}
+ case 'check':return `<label class="chk" style="grid-column:1/-1;margin-bottom:12px"><input type="checkbox" data-ck="${it.k}" ${v?'checked':''}>${it.l}</label>`;
+ case 'tpl':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span><div class="row">${Object.entries(TPL).filter(([k])=>!k.startsWith('abit')).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><span class="cap" style="margin-top:10px">AWIN ABIT (Arkansas Basic Interoperability Template, July 2018)</span><div class="row"><button data-act="tpl" data-tpl="abit_all" class="pri">+ ${esc(TPL.abit_all.l)}</button>${Object.entries(TPL).filter(([k])=>/^abit_(z|exer)/.test(k)).map(([k,t])=>`<button data-act="tpl" data-tpl="${k}">+ ${esc(t.l)}</button>`).join('')}</div><div class="row"><button data-act="push205" class="pri">Copy these channels into ICS 205</button></div></div>`;
  case 'contents':return `<div style="grid-column:1/-1;margin-bottom:12px"><span class="cap">${it.l}</span>${contentKeys(p).map(k=>`<label class="chk"><input type="checkbox" data-inc="${k}" ${isInc(p,k)?'checked':''}>${SCHEMA[k].n} - ${SCHEMA[k].t}</label>`).join('')}<label class="chk"><input type="checkbox" data-inc="map" ${isInc(p,'map')?'checked':''}>Map / Chart (attach)</label><label class="chk"><input type="checkbox" data-inc="wx" ${isInc(p,'wx')?'checked':''}>Weather forecast / tides / currents (attach)</label></div>`;
  }return ''}
 
@@ -448,7 +478,7 @@ const contentKeys=p=>[...IAP_ORDER,...EXTRA.filter(k=>(p.d[k]||[]).length)];
 function pr(it,o,p){
  const v=o[it.k];
  switch(it.t){
- case 'text':return `<div class="pf" style="${it.half?'display:inline-block;width:49%;vertical-align:top;margin-right:.5%':''}"><b>${it.l}</b><div class="v">${esc(v)}</div>${SIGKEYS.includes(it.k)?sigPrint(o,it.k):''}</div>`;
+ case 'text':if(it.noprint)return '';return `<div class="pf" style="${it.half?'display:inline-block;width:49%;vertical-align:top;margin-right:.5%':''}"><b>${it.l}</b><div class="v">${esc(v)}</div>${SIGKEYS.includes(it.k)?sigPrint(o,it.k):''}</div>`;
  case 'dt':return `<div class="pf" style="display:inline-block;width:49%"><b>${it.l}</b><div class="v">${esc(fmt(v))}</div></div>`;
  case 'area':return `<div class="pf"><b>${it.l}</b><div class="v">${esc(v)}</div></div>`;
  case 'yn':return `<div class="pf"><b>${it.l}</b><div class="v">${v==='Yes'?'&#9745; Yes &#9744; No':v==='No'?'&#9744; Yes &#9745; No':'&#9744; Yes &#9744; No'}</div></div>`;
@@ -456,6 +486,8 @@ function pr(it,o,p){
  case 'table':return `<div class="pcap">${it.l}</div>${ptable(it.cols,v,it.sum)}`;
  case 'roster':return ROSTER.map(g=>`<div class="pcap">${g.g}</div><table class="pt"><thead><tr><th>Position</th><th>Status</th><th>Name</th><th>Agency</th><th>Contact</th></tr></thead><tbody>${g.rows.map(pos=>{const r=(v||{})[rk(g.g,pos)]||{};return `<tr><td>${esc(pos)}</td><td>${esc(effStatus(r))}</td><td>${esc(r.n)}</td><td>${esc(r.a)}</td><td>${esc(r.c)}</td></tr>`}).join('')}</tbody></table>`).join('');
  case 'tpl':return '';
+ case 'check':return '';
+ case 'imgpick':{const u=(S.images||{})[v];return `<div class="attimg">${u?`<img src="${esc(u)}" alt="">`:'<p>(no image selected)</p>'}<div class="acap">${esc(o.caption)}${o.credit?' <i>('+esc(o.credit)+')</i>':''}${o.ai?' <b>[AI-generated image]</b>':''}</div></div>`}
  case 'contents':return `<div class="pf"><b>${it.l}</b><div class="v">${contentKeys(p).map(k=>`${isInc(p,k)?'&#9745;':'&#9744;'} ${SCHEMA[k].n} ${SCHEMA[k].t}`).join('<br>')}<br>${isInc(p,'map')?'&#9745;':'&#9744;'} Map / Chart<br>${isInc(p,'wx')?'&#9745;':'&#9744;'} Weather forecast / tides / currents</div></div>`}
  return ''}
 function orgChart(p){
@@ -483,7 +515,7 @@ function formPage(k,inc,p,inst){
  const s=SCHEMA[k];
  if(k==='f207')return page(s.t,s.n,orgChart(p),inc,p);
  const o=INST.includes(k)?inst:s.scope==='inc'?inc.brief:p.d[k];ensure(s.items,o);
- return page(s.t,s.n,s.items.map(it=>pr(it,o,p)).join(''),inc,s.scope==='inc'?null:p);}
+ return page(k==='fatt'?(inst.title||s.t):s.t,s.n,s.items.map(it=>pr(it,o,p)).join(''),inc,s.scope==='inc'?null:p);}
 function logPage(inc){const rows=[...(inc.log||[])].sort((a,b)=>(a.t||'').localeCompare(b.t||''));const l=inc.logger||{};
  return page('Activity Log','ICS 214',`<div class="pfg"><div class="pf"><b>Name</b>${esc(l.name)}</div><div class="pf"><b>ICS position</b>${esc(l.pos)}</div></div><div class="pf"><b>Home agency (and unit)</b>${esc(l.agency)}</div><table class="pt"><thead><tr><th style="width:110px">Date/time</th><th>Notable activities</th><th>By</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmt(e.t))}</td><td style="white-space:pre-wrap">${esc(e.text)}</td><td>${esc(e.who)}</td></tr>`).join('')||'<tr><td>&nbsp;</td><td></td><td></td></tr>'}</tbody></table>`,inc,null)}
 function iapHTML(inc,p){
@@ -524,11 +556,11 @@ function renderSide(){
  let h=`<div class="brand">IAP Builder<small>FEMA ICS forms &middot; works offline</small></div>
  <div class="blk"><label class="lbl">Incident</label><select id="incSel">${S.incidents.map(i=>`<option value="${i.id}" ${i.id===S.cur?'selected':''}>${esc(i.name)}</option>`).join('')||'<option>(none)</option>'}</select>
  <div class="row"><button data-act="newInc" class="pri">+ New</button>${inc?'<button data-act="editInc">Edit</button><button data-act="delInc" class="danger">Delete</button>':''}</div></div>`;
- if(!inc){$('#side').innerHTML=h;return}
+ if(!inc){h+=`<button class="nav ${ui.form==='imglib'?'on':''}" data-act="go" data-f="imglib"><i class="dot ${(S.lib||[]).length?'part':''}"></i>Image library<span>${(S.lib||[]).length} image(s)</span></button>`;$('#side').innerHTML=h;return}
  const p=curP();
  h+=`<div class="blk"><label class="lbl">Operational period</label><select id="perSel">${inc.periods.map((x,i)=>`<option value="${i}" ${i===inc.pi?'selected':''}>Period ${i+1}: ${fmt(x.from)}${x.status==='approved'?' (approved)':''}</option>`).join('')}</select><div class="row"><button data-act="newPer" class="pri">+ Next period</button></div></div>`;
  const nv=(f,t,s,dot,extra)=>`<button class="nav ${!ui.preview&&ui.form===f&&!extra?'on':''}" data-act="go" data-f="${f}"><i class="dot ${dot}"></i>${t}<span>${s}</span></button>`;
- h+=`<label class="lbl">Incident-level</label>`+nv('f201','ICS 201','Briefing',hasData(inc.brief)?'part':'')+nv('f214','ICS 214','Activity log',(inc.log||[]).length?'part':'')+nv('cover','Cover page','Front image',coverImg(inc)?'part':'');
+ h+=`<label class="lbl">Incident-level</label>`+nv('f201','ICS 201','Briefing',hasData(inc.brief)?'part':'')+nv('f214','ICS 214','Activity log',(inc.log||[]).length?'part':'')+nv('cover','Cover page','Front image',coverImg(inc)?'part':'')+nv('imglib','Image library',(S.lib||[]).length+' image(s)',(S.lib||[]).length?'part':'');
  h+=`<label class="lbl">Period ${inc.pi+1} - IAP forms</label>`;
  IAP_ORDER.forEach(k=>{const s=SCHEMA[k];
   if(k==='f204'){h+=nv(k,s.n,s.t,hasData(arr(p,k))?'part':'');h+=subs(k,p)}
@@ -545,6 +577,7 @@ function subs(k,p){const l=arr(p,k);let h=l.map((x,i)=>`<button class="nav sub $
  if(k==='f204')h+=`<button class="nav sub" data-act="addInst" data-f="f204">+ Add assignment list</button>`;return h}
 function renderMain(){
  const inc=curInc(),m=$('#main'),y=scrollY;
+ if(ui.form==='imglib'&&!ui.preview){m.innerHTML=libHTML();scrollTo(0,y);return}
  if(!inc){m.innerHTML=`<div class="empty"><h2>Incident Action Plan Builder</h2><p>Create an incident to begin. Fill in ICS forms as information comes in, then start the next operational period and carry the plan forward.</p><button class="pri" data-act="newInc">+ New incident</button></div>`;return}
  const p=curP(),locked=p.status==='approved',n=inc.pi+1;
  let h=`<div class="top"><div class="grow"><b>${esc(inc.name)}</b> <span class="mut">${inc.number?'#'+esc(inc.number):'(no incident #)'}</span><br><span class="mut" style="font-size:13px">${[inc.type,inc.location,inc.jurisdiction,inc.declaration?'Decl. '+inc.declaration:'',inc.started?'Began '+fmt(inc.started):''].filter(Boolean).map(esc).join(' &middot; ')||'<a href="#" data-act="editInc">Add incident type, location, jurisdiction, declaration #</a>'}</span><br><span class="mut">Operational Period ${n}: ${fmt(p.from)} to ${fmt(p.to)}</span></div><span class="pill ${locked?'ok':'warn'}">${locked?'APPROVED '+fmt(p.approvedAt):'DRAFT'}</span><button data-act="editPer">Edit times</button><button data-act="approve" class="${locked?'':'pri'}">${locked?'Unlock':'Mark approved'}</button><span class="mut" id="saved" style="font-size:12px"></span></div>`;
@@ -560,7 +593,7 @@ function renderMain(){
   ${img?`<img class="cvprev" src="${esc(img)}" alt="Cover image preview"><div class="mut" style="text-align:center;font-size:12px">${esc(cv.name||'')}${cv.size?' &middot; '+cv.size:''}</div>`:''}
   <div class="grid2" style="margin-top:14px"><label class="f"><span>Caption (optional)</span><input data-p='["caption"]' value="${esc(cv.caption)}" placeholder="e.g. Flooding on Main Street, 05 Oct 2026"></label><label class="f"><span>Photo credit / source (optional)</span><input data-p='["credit"]' value="${esc(cv.credit)}" placeholder="e.g. Pope County EM"></label></div>
   <label class="chk"><input type="checkbox" id="coverAI" ${cv.ai?'checked':''}>This image is AI-generated (prints an &quot;AI-generated image&quot; label)</label>
-  ${img?'<div class="row"><button class="danger" data-act="coverRemove">Remove image</button></div>':''}</div>`}
+  <div class="row"><button data-act="pickImg" data-t="cover">Choose from library</button>${img&&!(S.lib||[]).some(l=>l.imgId===cv.imgId)?'<button data-act="coverToLib">Save this image to library</button>':''}${img?'<button class="danger" data-act="coverRemove">Remove image</button>':''}</div></div>`}
  else if(ui.form==='f214'){
   inc.logger=inc.logger||{};inc.log=inc.log||[];
   h+=`<div style="display:flex;gap:10px;align-items:center"><div style="flex:1"><h2>ICS 214 Activity Log</h2><span class="mut">Ongoing, timestamped record of notable activities</span></div><button data-act="printLog">Print log</button></div>
@@ -605,7 +638,7 @@ const ACT={
    const inc={id:uid(),name:o.name.trim()||'Unnamed incident',number:o.number,type:o.type,location:o.location,jurisdiction:o.jurisdiction,declaration:o.declaration,started:o.started,brief:{},log:[],logger:{},periods:[newPeriod(o.from,o.to)],pi:0};
    S.incidents.push(inc);S.cur=inc.id;ui={form:'f203',inst:null,preview:false};save();render()})},
  editInc(){const i=curInc();ask('Edit incident (prints on every form)',[{k:'name',l:'Incident name',v:i.name},{k:'number',l:'Incident number',v:i.number},{k:'type',l:'Incident type',v:i.type},{k:'location',l:'Location',v:i.location},{k:'jurisdiction',l:'Jurisdiction / agency',v:i.jurisdiction},{k:'declaration',l:'Declaration / disaster #',v:i.declaration},{k:'started',l:'Incident began (date/time)',t:'datetime-local',v:i.started}],o=>{i.name=o.name.trim()||i.name;['number','type','location','jurisdiction','declaration','started'].forEach(k=>i[k]=o[k]);save();render()})},
- delInc(){const i=curInc();if(confirm(`Delete "${i.name}" and ALL its periods and logs? This cannot be undone. Export a backup first if unsure.`)){if(i.cover&&i.cover.imgId&&S.images)delete S.images[i.cover.imgId];S.incidents=S.incidents.filter(x=>x!==i);S.cur=S.incidents[0]&&S.incidents[0].id;save();render()}},
+ delInc(){const i=curInc();if(confirm(`Delete "${i.name}" and ALL its periods and logs? This cannot be undone. Export a backup first if unsure.`)){const imgs=[i.cover&&i.cover.imgId,...i.periods.flatMap(p=>(p.d.fatt||[]).map(a=>a.img))];S.incidents=S.incidents.filter(x=>x!==i);imgs.forEach(gcImg);S.cur=S.incidents[0]&&S.incidents[0].id;save();render()}},
  newPer(){const inc=curInc(),pv=curP();const dur=new Date(pv.to)-new Date(pv.from)||12*36e5;const to=new Date(new Date(pv.to).getTime()+dur);
   ask('Start next operational period',[{k:'from',l:'From',t:'datetime-local',v:pv.to},{k:'to',l:'To',t:'datetime-local',v:toLocal(to)},{k:'copy',l:'Starting content',t:'select',o:[['copy','Copy forward from previous period (recommended)'],['blank','Start blank']]}],o=>{
    const np=newPeriod(o.from,o.to);
@@ -618,13 +651,27 @@ const ACT={
  preview(){ui.preview=true;scrollTo(0,0);render()},
  addInst(el){const p=curP(),f=el.dataset.f,x={id:uid()};if(SCHEMA[f].items.some(i=>i.k==='dt'&&i.t==='dt'))x.dt=toLocal(new Date());fillPrep(curInc(),f,x);arr(p,f).push(x);ui.form=f;ui.inst=x.id;ui.preview=false;save();render();scrollTo(0,0)},
  dupInst(){const p=curP(),l=arr(p,ui.form),s=l.find(x=>x.id===ui.inst);if(!s)return;const x=JSON.parse(JSON.stringify(s));x.id=uid();const lk={f204:'div',f215:'title',f217a:'title',f213:'subject',f309:'op'}[ui.form];if(lk)x[lk]=(x[lk]||'')+' (copy)';l.push(x);ui.inst=x.id;save();render()},
- delInst(){const p=curP();if(confirm('Delete this '+SCHEMA[ui.form].n+' form?')){p.d[ui.form]=arr(p,ui.form).filter(x=>x.id!==ui.inst);ui.inst=(p.d[ui.form][0]||{}).id;save();render()}},
+ delInst(){const p=curP();if(confirm('Delete this '+SCHEMA[ui.form].n+' form?')){const gone=arr(p,ui.form).find(x=>x.id===ui.inst);p.d[ui.form]=arr(p,ui.form).filter(x=>x.id!==ui.inst);if(gone&&gone.img)gcImg(gone.img);ui.inst=(p.d[ui.form][0]||{}).id;save();render()}},
  tpl(el){const o=curObj(),t=TPL[el.dataset.tpl],ks=['sys','ch','fn','name','rxf','rxt','txf','txt','mode','rem'];
   o.ch=(o.ch||[]).filter(hasData);t.rows.forEach(r=>{const x={};ks.forEach((k,i)=>x[k]=r[i]);o.ch.push(x)});save();render()},
  push205(){const o=curObj(),p=curP(),rows=(o.ch||[]).filter(hasData);if(!rows.length){alert('No channels to copy yet.');return}
   if(!confirm(`Copy ${rows.length} channel(s) into ICS 205 for this operational period? Existing ICS 205 rows are kept.`))return;
   const f=p.d.f205;f.ch=(f.ch||[]).filter(hasData);rows.forEach(r=>f.ch.push({zone:r.sys,ch:r.ch,fn:r.fn,name:r.name,as:'',rxf:r.rxf,rxt:r.rxt,txf:r.txf,txt:r.txt,mode:r.mode,rem:r.rem}));save();render();alert('Copied. Fill in the Assignment column in ICS 205.')},
- coverRemove(){const inc=curInc();if(confirm('Remove the cover image?')){if(inc.cover&&inc.cover.imgId&&S.images)delete S.images[inc.cover.imgId];inc.cover={caption:inc.cover&&inc.cover.caption,credit:inc.cover&&inc.cover.credit};save();render()}},
+ coverRemove(){const inc=curInc();if(confirm('Remove the cover image? (Images saved in the library stay there.)')){const old=inc.cover&&inc.cover.imgId;inc.cover={caption:inc.cover&&inc.cover.caption,credit:inc.cover&&inc.cover.credit};gcImg(old);save();render()}},
+ pickImg(el){const l=S.lib||[];ui.pick={t:el.dataset.t};
+  sigShow(`<h3 style="margin-top:0">Choose from image library</h3>${l.length?`<div class="lgrid">${l.map(it=>`<button class="lcard" data-act="pickPut" data-id="${it.id}" style="text-align:left"><img src="${esc((S.images||{})[it.imgId]||'')}" alt=""><b>${esc(it.title)}</b><span class="mut" style="font-size:12px">${esc(it.tags)}</span></button>`).join('')}</div>`:'<p class="mut">The library is empty. Add images in the Image library first.</p>'}<div class="row end"><button data-act="sigClose" class="ghost">Cancel</button>${l.length?'':'<button class="pri" data-act="goLib">Open Image library</button>'}</div>`)},
+ goLib(){$('#sigdlg').close();ui.form='imglib';ui.preview=false;render()},
+ pickPut(el){const it=(S.lib||[]).find(x=>x.id===el.dataset.id),inc=curInc();if(!it||!inc)return;
+  if(ui.pick&&ui.pick.t==='cover'){const old=inc.cover&&inc.cover.imgId;inc.cover=Object.assign(inc.cover||{},{imgId:it.imgId,name:it.title,size:it.size});gcImg(old)}
+  else{const o=curObj(),old=o.img;o.img=it.imgId;if(!o.title)o.title=it.title;gcImg(old)}
+  $('#sigdlg').close();save();render()},
+ libCover(el){const it=(S.lib||[]).find(x=>x.id===el.dataset.id),inc=curInc();if(!inc){alert('Create an incident first, then choose its cover image.');return}
+  const old=inc.cover&&inc.cover.imgId;inc.cover=Object.assign(inc.cover||{},{imgId:it.imgId,name:it.title,size:it.size});gcImg(old);ui.form='cover';save();render()},
+ libAtt(el){const it=(S.lib||[]).find(x=>x.id===el.dataset.id),p=curP();if(!p){alert('Create an incident first, then add the image as an attachment page.');return}
+  const x={id:uid(),img:it.imgId,title:it.title};arr(p,'fatt').push(x);ui.form='fatt';ui.inst=x.id;ui.preview=false;save();render()},
+ libDel(el){const it=(S.lib||[]).find(x=>x.id===el.dataset.id);if(!it)return;const n=imgRefs(it.imgId)-1;
+  if(confirm(`Delete "${it.title}" from the library?`+(n>0?`\n\nIt is still used in ${n} place(s) (cover or attachments); those keep their copy.`:''))){S.lib=S.lib.filter(x=>x!==it);gcImg(it.imgId);save();render()}},
+ coverToLib(){const inc=curInc(),cv=inc.cover;if(!cv||!cv.imgId)return;S.lib=S.lib||[];S.lib.push({id:uid(),imgId:cv.imgId,title:(cv.name||'cover image').replace(/\.[^.]+$/,''),tags:'',notes:'',at:toLocal(new Date()),size:cv.size||''});save();render()},
  sigMgr(){sigShow(sigMgrHTML())},
  sigClose(){$('#sigdlg').close()},
  sigNew(){sg={mode:'draw',drawn:false,name:'',pos:'',typed:''};sigShow(sigNewHTML());sigCanvas()},
@@ -655,7 +702,8 @@ const ACT={
  import(){$('#imp').click()}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el&&ACT[el.dataset.act]){e.preventDefault();ACT[el.dataset.act](el)}});
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='sgType'){drawTyped();return}if(t.id==='sgName'||t.id==='sgCons'){sigChk();return}
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='libFilter'){const q=t.value.toLowerCase();document.querySelectorAll('.lcard[data-q]').forEach(c=>c.style.display=c.dataset.q.includes(q)?'':'none');return}
+ if(t.id==='sgType'){drawTyped();return}if(t.id==='sgName'||t.id==='sgCons'){sigChk();return}
  const el=e.target,p=el.getAttribute&&el.getAttribute('data-p');if(!p)return;if(el.type==='radio'&&!el.checked)return;
  const o=curObj();if(!o)return;const pp=JSON.parse(p);setPath(o,pp,el.value);
  if(pp.length===1&&PREP_KEYS.includes(pp[0])&&remOn()&&!ui.preview){const inc=curInc();inc.prep=inc.prep||{};(inc.prep[ui.form]=inc.prep[ui.form]||{})[pp[0]]=el.value}
@@ -665,16 +713,22 @@ document.addEventListener('change',e=>{const el=e.target;
  if(el.dataset&&el.dataset.inc){curP().include[el.dataset.inc]=el.checked;save();renderSide();return}
  if(el.id==='sgCons'){sigChk();return}
  if(el.id==='coverFile'){const f=el.files[0];el.value='';if(f)setCover(f);return}
+ if(el.id==='libFile'){const fs=[...el.files];el.value='';if(fs.length)libAdd(fs,+($('#libQ')||{}).value||1600);return}
+ if(el.id==='attFile'){const f=el.files[0];el.value='';if(f)(async()=>{try{const o=curObj(),{id,r}=await addImage(f,1600);S.lib=S.lib||[];S.lib.push({id:uid(),imgId:id,title:(f.name||'image').replace(/\.[^.]+$/,''),tags:'',notes:'',at:toLocal(new Date()),size:imgInfo(r)});const old=o.img;o.img=id;if(!o.title)o.title=f.name.replace(/\.[^.]+$/,'');gcImg(old);save();render()}catch(e){alert(e)}})();return}
+ if(el.dataset&&el.dataset.ck){const o=curObj();if(o){o[el.dataset.ck]=el.checked;save()}return}
  if(el.id==='coverAI'){curObj().ai=el.checked;save();return}
  if(el.id==='remSet'){S.settings=S.settings||{};S.settings.rememberPrep=el.checked;save();renderMain();return}
  if(el.id==='incSel'){S.cur=el.value;ui={form:'f202',inst:null,preview:false};save();render();return}
  if(el.id==='perSel'){curInc().pi=+el.value;ui.inst=null;save();render();return}
  if(el.closest&&el.closest('.rg')&&el.tagName==='SELECT')renderMain();
- if(el.id==='imp'){const f=el.files[0];if(!f)return;f.text().then(t=>{try{const s=JSON.parse(t);if(!s.incidents)throw 0;if(!confirm(`Import ${s.incidents.length} incident(s)? Incidents with the same ID will be replaced.`))return;s.incidents.forEach(i=>{const k=S.incidents.findIndex(x=>x.id===i.id);if(k>=0)S.incidents[k]=i;else S.incidents.push(i)});S.images=Object.assign({},s.images||{},S.images||{});(s.sigs||[]).forEach(g=>{S.sigs=S.sigs||[];if(!S.sigs.some(x=>x.id===g.id))S.sigs.push(g)});S.cur=S.cur||s.cur;save();render()}catch(x){alert('That file is not a valid IAP Builder backup.')}el.value=''})}});
-document.addEventListener('paste',e=>{if(ui.form!=='cover'||ui.preview||!curInc())return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/'));if(it){e.preventDefault();setCover(it.getAsFile())}});
-document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d){e.preventDefault();d.classList.add('over')}});
-document.addEventListener('dragleave',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d)d.classList.remove('over')});
-document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('#drop');if(d){e.preventDefault();d.classList.remove('over');const f=e.dataTransfer.files[0];if(f)setCover(f)}});
+ if(el.id==='imp'){const f=el.files[0];if(!f)return;f.text().then(t=>{try{const s=JSON.parse(t);if(!s.incidents)throw 0;if(!confirm(`Import ${s.incidents.length} incident(s)? Incidents with the same ID will be replaced.`))return;s.incidents.forEach(i=>{const k=S.incidents.findIndex(x=>x.id===i.id);if(k>=0)S.incidents[k]=i;else S.incidents.push(i)});S.images=Object.assign({},s.images||{},S.images||{});(s.lib||[]).forEach(l=>{S.lib=S.lib||[];if(!S.lib.some(x=>x.id===l.id))S.lib.push(l)});(s.sigs||[]).forEach(g=>{S.sigs=S.sigs||[];if(!S.sigs.some(x=>x.id===g.id))S.sigs.push(g)});S.cur=S.cur||s.cur;save();render()}catch(x){alert('That file is not a valid IAP Builder backup.')}el.value=''})}});
+document.addEventListener('paste',e=>{if(ui.form==='imglib'&&!ui.preview){const its=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.type.startsWith('image/'));if(its.length){e.preventDefault();libAdd(its.map(i=>i.getAsFile()),+($('#libQ')||{}).value||1600)}return}
+ if(ui.form!=='cover'||ui.preview||!curInc())return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/'));if(it){e.preventDefault();setCover(it.getAsFile())}});
+const dz=e=>e.target.closest&&e.target.closest('#drop,#libdrop');
+document.addEventListener('dragover',e=>{const d=dz(e);if(d){e.preventDefault();d.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const d=dz(e);if(d)d.classList.remove('over')});
+document.addEventListener('drop',e=>{const d=dz(e);if(!d)return;e.preventDefault();d.classList.remove('over');
+ if(d.id==='libdrop')libAdd([...e.dataTransfer.files],+($('#libQ')||{}).value||1600);else{const f=e.dataTransfer.files[0];if(f)setCover(f)}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&e.target.id==='logNew')ACT.addLog()});
 if(!curInc())S.cur=S.incidents[0]&&S.incidents[0].id;
 render();
