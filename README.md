@@ -8,6 +8,8 @@ IAP Builder is a single HTML file (`index.html`). There is nothing to install an
 
 ### Quick start
 
+**Want to see it first?** Click **Demo** in the sidebar (or **Load a demo incident** on the start screen). It loads a fully filled-in, fictional flood exercise ("DEMO - Riverbend Flood", Example County) with two operational periods, a signed and approved period 1, a staffed ICS 203 roster, a radio plan, an exercise banner, a cover image and an attachment map. All names, agencies and phone numbers are made up. Loading it again replaces the previous demo; your real incidents are never touched, and deleting the demo removes its sample images.
+
 1. **+ New incident.** Enter the incident name, number, type, location, jurisdiction/agency, declaration number, when it began, whether it is a real event or an exercise, and the first operational period. These print in the header of every form, in every page footer, and in the PDF filename.
 2. **Fill in ICS 203 first.** Mark each position *Filled*, *Not activated*, or *Needed - unfilled* and enter a name, agency and contact. Every other form then shows an **Ask:** banner naming who owns that information (for example the COML for ICS 205/205A/217A/309). If the owner is not filled, the banner says so and names the fallback.
 3. **Work through the forms as information comes in.** Everything autosaves as you type.
@@ -49,6 +51,7 @@ On any ICS 217A, template buttons add rows, and **Copy these channels into ICS 2
 
 - **Multiple operational periods** per incident, and multiple incidents.
 - **Exercise marking.** In the New/Edit incident dialog, choose "EXERCISE / training" (and optionally name the exercise). Every printed page, the cover, and the screen preview then carry an "EXERCISE - NOT A REAL EVENT" banner at the top and bottom, the top bar shows an EXERCISE badge, and the PDF filename starts with "EXERCISE". Switch it off to treat the incident as a real event.
+- **Demo incident.** A one-click, fully pre-filled fictional example for training and demonstrations (see Quick start).
 - **Remember "Prepared by" per form** (sidebar toggle). New forms and periods are pre-filled with the last preparer for that form; existing forms offer a one-click "use last preparer". Approvals are never remembered.
 - **E-signatures** (sidebar). Draw or type a signature, optionally protect it with a PIN, then click **Sign** next to a signature field. Each signature is time-stamped. If the form body is edited afterwards, the signature is flagged on screen, in print, and in the readiness checks.
 - **Backup / restore:** Export backup and Import in the sidebar (includes the image library).
