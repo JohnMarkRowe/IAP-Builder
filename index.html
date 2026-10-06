@@ -817,6 +817,11 @@ document.addEventListener('drop',e=>{const d=dz(e);if(!d)return;e.preventDefault
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&e.target.id==='logNew')ACT.addLog()});
 if(!curInc())S.cur=S.incidents[0]&&S.incidents[0].id;
 render();
+/* "?demo=1" link: open the demo incident (reuse it if already loaded) */
+try{if(new URLSearchParams(location.search).get('demo')==='1'){
+ const ex=S.incidents.find(i=>i.demo);
+ if(ex){S.cur=ex.id;ui={form:'f202',inst:null,preview:true};save();render()}else loadDemo();
+ if(history.replaceState)history.replaceState(null,'',location.pathname)}}catch(e){}
 </script>
 </body>
 </html>
