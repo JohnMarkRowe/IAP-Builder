@@ -8,13 +8,18 @@ Builds, maintains, allows printing, an Incident Action Plan.  It is fairly speci
 
 ## Usage notes
 
-IAP Builder is a single HTML file (`index.html`). There is nothing to install and no server: open the live link, or download the file and open it in a current browser (Chrome, Edge, Firefox, Safari). It works offline once loaded.
+IAP Builder is a web app that runs entirely in your browser: no account, no server, nothing sent anywhere. Open the live link, or install it on a phone or computer (see "How to install on a phone") and it works fully offline. The core is a single file, `index.html`, which also opens as a plain page in a current browser (Chrome, Edge, Firefox, Safari); `sw.js`, `manifest.webmanifest` and `icons/` add the offline install.
 
 **Phone-friendly.** The layout adapts to phones and tablets: forms stack into a single column, wide tables (such as the radio plan) scroll sideways inside their own box instead of stretching the page, and the guided tour moves its card to the bottom or top of the screen. This was checked at a 375 x 812 phone size in a browser emulator, not yet on physical devices, so please report anything odd. For long entries and printing, a tablet or computer is more comfortable.
 
-### How to install on a phone
+### How to install on a phone (or computer)
 
-There is no app-store version. IAP Builder is a web page, and "installing" it means adding a **shortcut to your home screen** so it opens full screen like an app. You need a connection the first time you open it.
+IAP Builder is an installable web app. Installing puts an icon on your home screen or app list, opens it full screen like an app, and lets it **work offline**. You need a connection the first time you open it, so it can save itself to the device.
+
+**Android (Chrome)**
+
+1. Open <https://johnmarkrowe.github.io/IAP-Builder/> in **Chrome**.
+2. Tap **Install app** in the **App** section of the sidebar, or open the three-dot menu and choose **Install app** (or **Add to Home screen**), then **Install**.
 
 **iPhone / iPad (Safari)**
 
@@ -22,20 +27,21 @@ There is no app-store version. IAP Builder is a web page, and "installing" it me
 2. Tap the **Share** button (the square with an arrow).
 3. Scroll down and tap **Add to Home Screen**, then **Add**.
 
-**Android (Chrome)**
+**Computer (Chrome or Edge)**
 
-1. Open <https://johnmarkrowe.github.io/IAP-Builder/> in **Chrome**.
-2. Tap the **three-dot menu** at the top right.
-3. Tap **Add to Home screen** (on some versions **Install app**), then **Add**.
+Click the install icon at the right end of the address bar, or **Install app** in the sidebar's **App** section.
+
+**Check that offline works.** In the sidebar's **App** section you should see **Works offline on this device**. To be sure before you rely on it, open the app once while online, then turn on airplane mode and open it again: it should load with your incidents. This also works for the demo and tour links.
 
 **Things to know**
 
-- **Pick one place to work.** On iPhone/iPad the Home Screen icon keeps its **own storage, separate from Safari**, so incidents you started in Safari will not appear in the icon (and the other way round). On Android the shortcut normally shares Chrome's storage. To move an incident between places or devices, use **Export backup** and **Import** (sidebar), for example by sending the backup file to yourself.
-- **Your data stays on the phone**, in the browser's storage. Nothing is uploaded. Private/incognito windows do not keep it.
-- **Back up regularly.** Safari can clear a website's stored data after about a week of not using it in the browser; the Home Screen icon is generally not affected, but export a backup anyway, especially during an active incident.
-- **Offline use is not guaranteed.** The shortcut opens the website; the page is not set up as an offline-capable installed app. Open it at least once with a connection, and before going into the field check that it opens in airplane mode. If you will have no signal, work on a laptop or tablet with the file saved (download `index.html` from this repository and open it in a browser).
-- **Updates are automatic.** The shortcut loads the current version from the website each time you are online.
+- **Pick one place to work.** On iPhone/iPad the Home Screen icon keeps its **own storage, separate from Safari**, so incidents you started in Safari will not appear in the icon (and the other way round). On Android and computers the installed app normally shares the browser's storage. To move an incident between places or devices, use **Export backup** and **Import** (sidebar), for example by sending the backup file to yourself.
+- **Your data stays on the device**, in the browser's storage. Nothing is uploaded. Private/incognito windows do not keep it.
+- **Back up regularly.** Safari can clear a website's stored data after about a week of not using it in the browser; an installed Home Screen app is generally not affected, but export a backup anyway, especially during an active incident.
+- **Updates.** When you are online the app loads the newest version each time you open it. If the connection is missing or slow (more than about 2.5 seconds), it opens the saved copy instead.
 - **To remove it,** delete the icon like any app. Your saved incidents stay in the browser's site data until you clear it.
+- **Tested so far:** the offline cache was verified in desktop Chrome by shutting the web server down and reloading. The install steps above follow each platform's standard flow but have not yet been tried on physical phones, so please report anything that behaves differently.
+- **Hosting your own copy?** Serve `index.html`, `sw.js`, `manifest.webmanifest` and the `icons/` folder together over HTTPS. Opening `index.html` alone still works as a normal page, but without offline install.
 - On a phone, long entries and printing are more comfortable on a tablet or computer; use **Preview / Print IAP** then save as PDF or print from your device's share/print option.
 
 ### Quick start
@@ -102,7 +108,7 @@ Everything is stored in **your browser's local storage on your device**. Nothing
 ### Limitations
 
 - No shared or multi-user editing.
-- Phone use has been tested only in an emulated 375 x 812 view. Drawing a signature with a finger and the phone print dialog have not been tried on a real device.
+- Phone use has been tested only in an emulated 375 x 812 view, and offline install only in desktop Chrome. The iOS and Android install flows, drawing a signature with a finger, and the phone print dialog have not been tried on a real device.
 - Print layout depends on the browser's print engine; review the PDF before distributing.
 - Reference data (NIFOG, ABIT) is a snapshot. It is a planning aid, not an authoritative source.
 
