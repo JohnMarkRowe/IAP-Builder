@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IAP Builder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f4e8c">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IAP Builder">
 <style>
 :root{--bg:#f3f5f8;--panel:#fff;--ink:#1b2430;--mut:#667085;--line:#d5dce6;--acc:#1f4e8c;--accink:#fff;--ok:#1a7f4b;--warn:#b54708;--bad:#b42318;--inp:#fff;--soft:#eaf0f8}
 @media (prefers-color-scheme:dark){:root{--bg:#0f141b;--panel:#18202b;--ink:#e6ebf2;--mut:#93a1b5;--line:#2b3646;--acc:#5b9bff;--accink:#0b1220;--ok:#4cc38a;--warn:#f0a050;--bad:#ff8a80;--inp:#111821;--soft:#1d2836}}
@@ -436,6 +443,8 @@ const isInc=(p,k)=>k in p.include?p.include[k]:(INC_DEFAULT[k]!==undefined?INC_D
 /* ---------- state ---------- */
 let S=(()=>{try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.incidents)return s}catch(e){}return{incidents:[],cur:null}})();
 let ui={form:'f202',inst:null,preview:false};
+let offlineState='unsupported',installEvt=null;
+const appBlock=()=>`<div class="blk"><label class="lbl">App</label>${installEvt?'<button data-act="install" class="pri">Install app</button>':''}<p class="mut" style="font-size:12px;margin:6px 0 0">${offlineState==='ready'?'&#10003; Works offline on this device':offlineState==='checking'?'Preparing offline use...':'Offline use needs the web address (not a local file).'}</p></div>`;
 let saveT;
 function save(){
  $('#saved')&&($('#saved').textContent='Saving...');
@@ -570,7 +579,7 @@ function renderSide(){
  let h=`<div class="brand">IAP Builder<small>FEMA ICS forms &middot; works offline</small></div>
  <div class="blk"><label class="lbl">Incident</label><select id="incSel">${S.incidents.map(i=>`<option value="${i.id}" ${i.id===S.cur?'selected':''}>${esc(i.name)}</option>`).join('')||'<option>(none)</option>'}</select>
  <div class="row"><button data-act="newInc" class="pri">+ New</button><button data-act="newInc" data-mode="exercise" title="Start a blank incident marked as an EXERCISE (prints an EXERCISE banner)">Exercise</button><button data-act="newInc" data-mode="training" title="Start a blank incident marked as TRAINING (prints a TRAINING banner)">Training</button><button data-act="loadDemo" title="Load a fully filled-in fictional example incident">Demo</button><button data-act="tour" title="A short guided walkthrough, using a fictional demo incident">&#9654; Tour</button>${inc?'<button data-act="editInc">Edit</button><button data-act="delInc" class="danger">Delete</button>':''}</div></div>`;
- if(!inc){h+=`<button class="nav ${ui.form==='imglib'?'on':''}" data-act="go" data-f="imglib"><i class="dot ${(S.lib||[]).length?'part':''}"></i>Image library<span>${(S.lib||[]).length} image(s)</span></button>`;$('#side').innerHTML=h;return}
+ if(!inc){h+=`<button class="nav ${ui.form==='imglib'?'on':''}" data-act="go" data-f="imglib"><i class="dot ${(S.lib||[]).length?'part':''}"></i>Image library<span>${(S.lib||[]).length} image(s)</span></button>`+appBlock();$('#side').innerHTML=h;return}
  const p=curP();
  h+=`<div class="blk"><label class="lbl">Operational period</label><select id="perSel">${inc.periods.map((x,i)=>`<option value="${i}" ${i===inc.pi?'selected':''}>Period ${i+1}: ${fmt(x.from)}${x.status==='approved'?' (approved)':''}</option>`).join('')}</select><div class="row"><button data-act="newPer" class="pri">+ Next period</button></div></div>`;
  const nv=(f,t,s,dot,extra)=>`<button class="nav ${!ui.preview&&ui.form===f&&!extra?'on':''}" data-act="go" data-f="${f}"><i class="dot ${dot}"></i>${t}<span>${s}</span></button>`;
@@ -585,6 +594,7 @@ function renderSide(){
  h+=`<div class="blk" style="margin-top:14px"><button class="nav ${ui.preview?'on':''}" data-act="preview"><i class="dot ${nc?'':'part'}"></i>Preview / Print IAP<span>${nc?nc+' open items':'ready'}</span></button></div>
  <div class="blk"><label class="lbl">Preparers</label><label class="chk"><input type="checkbox" id="remSet" ${remOn()?'checked':''}>Remember &quot;Prepared by&quot; per form</label><button data-act="forgetPrep" style="margin-top:4px">Forget remembered</button></div>
  <div class="blk"><label class="lbl">E-signatures</label><button data-act="sigMgr">Manage signatures (${(S.sigs||[]).length})</button></div>
+ ${appBlock()}
  <div class="blk"><label class="lbl">Data</label><div class="row"><button data-act="export">Export backup</button><button data-act="import">Import</button></div><p class="mut" style="font-size:12px">Saved only in this browser. Export a backup regularly and before moving to another device.</p></div>`;
  $('#side').innerHTML=h}
 function subs(k,p){const l=arr(p,k);let h=l.map((x,i)=>`<button class="nav sub ${!ui.preview&&ui.form===k&&ui.inst===x.id?'on':''}" data-act="go" data-f="${k}" data-inst="${x.id}">${esc(instLabel(k,x,i))}</button>`).join('');
@@ -779,6 +789,7 @@ document.addEventListener('keydown',e=>{if(!tour)return;if(e.key==='Escape'){e.p
 addEventListener('resize',()=>tourPos());addEventListener('scroll',()=>tourPos(),true);
 const ACT={
  tour(){return tourStart()},
+ async install(){if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;renderSide()},
  loadDemo(){return loadDemo()},
  newInc(el){const md=(el&&el.dataset&&el.dataset.mode)||'no',a=hourNow(),b=new Date(a.getTime()+12*36e5);
   ask(md==='training'?'New training incident':md==='exercise'?'New exercise incident':'New incident',[{k:'name',l:'Incident name',v:md==='training'?'TRAINING - ':md==='exercise'?'EXERCISE - ':''},{k:'number',l:'Incident number (optional)'},{k:'type',l:'Incident type'},{k:'location',l:'Location'},{k:'jurisdiction',l:'Jurisdiction / agency'},{k:'declaration',l:'Declaration / disaster # (optional)'},{k:'started',l:'Incident began (date/time)',t:'datetime-local',v:toLocal(new Date())},{k:'exercise',l:'Real event, exercise, or training?',t:'select',v:md,o:[['no','Real event'],['exercise','EXERCISE (prints an EXERCISE banner on every page)'],['training','TRAINING (prints a TRAINING banner on every page)']]},{k:'exerciseName',l:'Exercise / training name (optional, e.g. "2026 Statewide Functional Exercise")'},{k:'from',l:'Operational period 1 - from',t:'datetime-local',v:toLocal(a)},{k:'to',l:'to',t:'datetime-local',v:toLocal(b)}],o=>{
@@ -881,6 +892,13 @@ document.addEventListener('drop',e=>{const d=dz(e);if(!d)return;e.preventDefault
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&e.target.id==='logNew')ACT.addLog()});
 if(!curInc())S.cur=S.incidents[0]&&S.incidents[0].id;
 render();
+/* offline install: service worker + install prompt (only on https or localhost) */
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderSide()});
+addEventListener('appinstalled',()=>{installEvt=null;renderSide()});
+try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+ offlineState='checking';renderSide();
+ navigator.serviceWorker.register('sw.js').catch(()=>{offlineState='unsupported';renderSide()});
+ navigator.serviceWorker.ready.then(()=>{offlineState='ready';renderSide()}).catch(()=>{})}}catch(e){}
 /* "?demo=1" link: open the demo incident (reuse it if already loaded) */
 try{const q=new URLSearchParams(location.search);
  if(q.get('demo')==='1'){

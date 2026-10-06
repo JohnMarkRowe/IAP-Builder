@@ -1,0 +1,20 @@
+{
+  "name": "IAP Builder",
+  "short_name": "IAP Builder",
+  "description": "Build, maintain and print Incident Action Plans using ICS forms. Works offline.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f8",
+  "theme_color": "#1f4e8c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Try the demo", "short_name": "Demo", "url": "./?demo=1" },
+    { "name": "Guided tour", "short_name": "Tour", "url": "./?tour=1" }
+  ]
+}
