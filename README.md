@@ -10,6 +10,8 @@ Builds, maintains, allows printing, an Incident Action Plan.  It is fairly speci
 
 IAP Builder is a single HTML file (`index.html`). There is nothing to install and no server: open the live link, or download the file and open it in a current browser (Chrome, Edge, Firefox, Safari). It works offline once loaded.
 
+**Phone-friendly.** The layout adapts to phones and tablets: forms stack into a single column, wide tables (such as the radio plan) scroll sideways inside their own box instead of stretching the page, and the guided tour moves its card to the bottom or top of the screen. This was checked at a 375 x 812 phone size in a browser emulator, not yet on physical devices, so please report anything odd. For long entries and printing, a tablet or computer is more comfortable.
+
 ### Quick start
 
 **Want to see it first?** Use the [Try the demo](https://johnmarkrowe.github.io/IAP-Builder/?demo=1) link, or click **Demo** in the sidebar (or **Load a demo incident** on the start screen). It loads a fully filled-in, fictional flood exercise ("DEMO - Riverbend Flood", Example County) with two operational periods, a signed and approved period 1, a staffed ICS 203 roster, a radio plan, an exercise banner, a cover image and an attachment map. All names, agencies and phone numbers are made up. Loading it again replaces the previous demo; your real incidents are never touched, and deleting the demo removes its sample images. For a step-by-step explanation, click **Tour** (next to **Demo**) for the [guided tour](https://johnmarkrowe.github.io/IAP-Builder/?tour=1).
@@ -74,6 +76,7 @@ Everything is stored in **your browser's local storage on your device**. Nothing
 ### Limitations
 
 - No shared or multi-user editing.
+- Phone use has been tested only in an emulated 375 x 812 view. Drawing a signature with a finger and the phone print dialog have not been tried on a real device.
 - Print layout depends on the browser's print engine; review the PDF before distributing.
 - Reference data (NIFOG, ABIT) is a snapshot. It is a planning aid, not an authoritative source.
 
