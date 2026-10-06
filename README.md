@@ -6,6 +6,8 @@ Builds, maintains, allows printing, an Incident Action Plan.  It is fairly speci
 
 **[Take the guided tour](https://johnmarkrowe.github.io/IAP-Builder/?tour=1)** - a short, step-by-step walkthrough of the whole process (14 steps, about 2 minutes). It runs on the fictional demo incident and leaves your own incidents untouched.
 
+> **Disclaimer.** IAP Builder is an independent planning aid. It is not an official product of FEMA, ADEM, AWIN or any other agency, and it has not been reviewed or approved by any of them. It does not replace the current official ICS forms, the NIFOG, or your agency's plans. Verify forms, frequencies, talkgroups and contacts against current official sources before using it in a real incident. It is provided as is, without warranty (see [LICENSE](LICENSE)). The sidebar and the printed cover page carry a short version of this notice.
+
 ## Usage notes
 
 IAP Builder is a web app that runs entirely in your browser: no account, no server, nothing sent anywhere. Open the live link, or install it on a phone or computer (see "How to install on a phone") and it works fully offline. The core is a single file, `index.html`, which also opens as a plain page in a current browser (Chrome, Edge, Firefox, Safari); `sw.js`, `manifest.webmanifest` and `icons/` add the offline install.
@@ -108,6 +110,7 @@ Everything is stored in **your browser's local storage on your device**. Nothing
 ### Limitations
 
 - No shared or multi-user editing.
+- Independent tool: not official or agency-approved (see the disclaimer at the top), and the forms are not pixel-for-pixel FEMA replicas.
 - Phone use has been tested only in an emulated 375 x 812 view, and offline install only in desktop Chrome. The iOS and Android install flows, drawing a signature with a finger, and the phone print dialog have not been tried on a real device.
 - Print layout depends on the browser's print engine; review the PDF before distributing.
 - Reference data (NIFOG, ABIT) is a snapshot. It is a planning aid, not an authoritative source.
