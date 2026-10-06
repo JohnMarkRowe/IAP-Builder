@@ -88,6 +88,10 @@ table.pt th,table.pt td{border:1px solid #000;padding:3px 5px;text-align:left;ve
 .attimg img{max-width:100%;max-height:7.4in;object-fit:contain;display:block;margin:6px auto}.attimg .acap{font-size:9pt;text-align:center}
 .cimg{margin:0 0 18px}.cimg img{max-width:100%;max-height:4.4in;object-fit:contain;display:block;margin:0 auto}.cimg figcaption{font-size:9pt;margin-top:5px;text-align:center}
 .cover.hasimg{padding-top:0}.cover.hasimg h1{font-size:26pt}
+#tour{position:fixed;inset:0;z-index:1000}#tourShade{position:fixed;inset:0}
+#tourSpot{position:fixed;border-radius:8px;box-shadow:0 0 0 9999px rgba(10,20,35,.62);outline:3px solid var(--acc);pointer-events:none;transition:left .2s,top .2s,width .2s,height .2s}
+#tourCard{position:fixed;width:min(380px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);outline:none}
+@media print{#tour{display:none!important}}
 .sigimg{height:42px;display:block;margin-top:3px}.sigmeta{font-size:8pt}
 @media (max-width:860px){#app{grid-template-columns:1fr}#side{position:static;height:auto}.grid2{grid-template-columns:1fr}.rg{grid-template-columns:1fr 1fr}.rg.h{display:none}.log .e{grid-template-columns:1fr}#main{padding:0 12px 60px}}
 @media print{
@@ -102,6 +106,9 @@ table.pt th,table.pt td{border:1px solid #000;padding:3px 5px;text-align:left;ve
 <div id="printRoot"></div>
 <dialog id="dlg"><form method="dialog"><h3 id="dtt" style="margin-top:0"></h3><div id="dbody"></div><div class="row end"><button value="cancel" class="ghost">Cancel</button><button value="ok" class="pri">OK</button></div></form></dialog>
 <dialog id="sigdlg"><div id="sigbody"></div></dialog>
+<div id="tour" hidden><div id="tourShade"></div><div id="tourSpot"></div>
+ <div id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle" tabindex="-1"><div id="tourStep" class="mut" style="font-size:12px"></div><h3 id="tourTitle" style="margin:2px 0 8px"></h3><div id="tourBody" style="font-size:14px"></div>
+  <div class="row" style="margin-top:14px;align-items:center"><button data-tour="skip" class="ghost">Skip tour</button><span style="flex:1"></span><button data-tour="back" id="tourBack">Back</button><button data-tour="next" id="tourNext" class="pri">Next</button></div></div></div>
 <input type="file" id="imp" accept=".json" hidden>
 
 <script>
@@ -559,7 +566,7 @@ function renderSide(){
  const inc=curInc();
  let h=`<div class="brand">IAP Builder<small>FEMA ICS forms &middot; works offline</small></div>
  <div class="blk"><label class="lbl">Incident</label><select id="incSel">${S.incidents.map(i=>`<option value="${i.id}" ${i.id===S.cur?'selected':''}>${esc(i.name)}</option>`).join('')||'<option>(none)</option>'}</select>
- <div class="row"><button data-act="newInc" class="pri">+ New</button><button data-act="newInc" data-mode="exercise" title="Start a blank incident marked as an EXERCISE (prints an EXERCISE banner)">Exercise</button><button data-act="newInc" data-mode="training" title="Start a blank incident marked as TRAINING (prints a TRAINING banner)">Training</button><button data-act="loadDemo" title="Load a fully filled-in fictional example incident">Demo</button>${inc?'<button data-act="editInc">Edit</button><button data-act="delInc" class="danger">Delete</button>':''}</div></div>`;
+ <div class="row"><button data-act="newInc" class="pri">+ New</button><button data-act="newInc" data-mode="exercise" title="Start a blank incident marked as an EXERCISE (prints an EXERCISE banner)">Exercise</button><button data-act="newInc" data-mode="training" title="Start a blank incident marked as TRAINING (prints a TRAINING banner)">Training</button><button data-act="loadDemo" title="Load a fully filled-in fictional example incident">Demo</button><button data-act="tour" title="A short guided walkthrough, using a fictional demo incident">&#9654; Tour</button>${inc?'<button data-act="editInc">Edit</button><button data-act="delInc" class="danger">Delete</button>':''}</div></div>`;
  if(!inc){h+=`<button class="nav ${ui.form==='imglib'?'on':''}" data-act="go" data-f="imglib"><i class="dot ${(S.lib||[]).length?'part':''}"></i>Image library<span>${(S.lib||[]).length} image(s)</span></button>`;$('#side').innerHTML=h;return}
  const p=curP();
  h+=`<div class="blk"><label class="lbl">Operational period</label><select id="perSel">${inc.periods.map((x,i)=>`<option value="${i}" ${i===inc.pi?'selected':''}>Period ${i+1}: ${fmt(x.from)}${x.status==='approved'?' (approved)':''}</option>`).join('')}</select><div class="row"><button data-act="newPer" class="pri">+ Next period</button></div></div>`;
@@ -582,7 +589,7 @@ function subs(k,p){const l=arr(p,k);let h=l.map((x,i)=>`<button class="nav sub $
 function renderMain(){
  const inc=curInc(),m=$('#main'),y=scrollY;
  if(ui.form==='imglib'&&!ui.preview){m.innerHTML=libHTML();scrollTo(0,y);return}
- if(!inc){m.innerHTML=`<div class="empty"><h2>Incident Action Plan Builder</h2><p>Create an incident to begin. Fill in ICS forms as information comes in, then start the next operational period and carry the plan forward.</p><button class="pri" data-act="newInc">+ New incident</button> <button data-act="newInc" data-mode="exercise">Exercise</button> <button data-act="newInc" data-mode="training">Training</button> <button data-act="loadDemo">Load a demo incident</button><p class="mut" style="font-size:13px;margin-top:14px">The demo is a fully filled-in, fictional flood exercise you can click through or print. It never touches your real incidents. <b>Exercise</b> and <b>Training</b> start a blank incident already marked as such, with an EXERCISE or TRAINING banner on every page.</p></div>`;return}
+ if(!inc){m.innerHTML=`<div class="empty"><h2>Incident Action Plan Builder</h2><p>Create an incident to begin. Fill in ICS forms as information comes in, then start the next operational period and carry the plan forward.</p><button class="pri" data-act="newInc">+ New incident</button> <button data-act="newInc" data-mode="exercise">Exercise</button> <button data-act="newInc" data-mode="training">Training</button> <button data-act="loadDemo">Load a demo incident</button> <button data-act="tour">&#9654; Tour</button><p class="mut" style="font-size:13px;margin-top:14px">The demo is a fully filled-in, fictional flood exercise you can click through or print. It never touches your real incidents. <b>Exercise</b> and <b>Training</b> start a blank incident already marked as such, with an EXERCISE or TRAINING banner on every page. <b>Tour</b> is a short guided walkthrough of the whole process.</p></div>`;return}
  const p=curP(),locked=p.status==='approved',n=inc.pi+1;
  let h=`<div class="top"><div class="grow"><b>${esc(inc.name)}</b> <span class="mut">${inc.number?'#'+esc(inc.number):'(no incident #)'}</span><br><span class="mut" style="font-size:13px">${[inc.type,inc.location,inc.jurisdiction,inc.declaration?'Decl. '+inc.declaration:'',inc.started?'Began '+fmt(inc.started):''].filter(Boolean).map(esc).join(' &middot; ')||'<a href="#" data-act="editInc">Add incident type, location, jurisdiction, declaration #</a>'}</span><br><span class="mut">Operational Period ${n}: ${fmt(p.from)} to ${fmt(p.to)}</span></div>${inc.exercise?'<span class="pill" style="background:#ffe066;color:#000;border:2px solid #000">'+exWord(inc)+'</span>':''}<span class="pill ${locked?'ok':'warn'}">${locked?'APPROVED '+fmt(p.approvedAt):'DRAFT'}</span><button data-act="editPer">Edit times</button><button data-act="approve" class="${locked?'':'pri'}">${locked?'Unlock':'Mark approved'}</button><span class="mut" id="saved" style="font-size:12px"></span></div>`;
  if(ui.preview){
@@ -714,7 +721,59 @@ async function loadDemo(){
   log,logger:{name:'C. Demo',pos:'Public Information Officer',agency:'Example County EM'},cover:{imgId:cId,name:'Riverbend flood (sample cover)',size:'1200 x 720 px',caption:'Sample scenario image',credit:'IAP Builder demo',ai:false},
   prep:{f205:{prepName:'F. Sample (COML)'},f309:{op:'F. Sample',opPos:'COML / ICP radio',prepName:'F. Sample (COML)'}},periods:[p1,p2],pi:0};
  S.incidents.push(inc);S.cur=inc.id;ui={form:'f202',inst:null,preview:true};save();render();scrollTo(0,0)}
+/* ---------- guided tour (runs on the fictional demo incident) ---------- */
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+let tour=null;
+const TG=(form,o)=>()=>{ui.form=form;ui.preview=!!(o&&o.preview);if(INST.includes(form)){const l=arr(curP(),form);ui.inst=(l[0]||{}).id}render();scrollTo(0,0)};
+const byText=(sel,txt)=>$$(sel).find(e=>e.textContent.includes(txt));
+const TOUR=[
+ {title:'Welcome',go:TG('f202'),text:`This short tour walks through building an Incident Action Plan, one step at a time, using a <b>fictional demo incident</b>. Your own incidents are not changed. Use <b>Next</b> and <b>Back</b>, the arrow keys, or <b>Esc</b> to leave at any time.`},
+ {title:'1. Start an incident',t:()=>$('#incSel').closest('.blk'),text:`Everything starts here. <b>+ New</b> creates a real incident. <b>Exercise</b> and <b>Training</b> create a blank incident that prints an EXERCISE or TRAINING banner on every page. <b>Demo</b> loads this example.<br><br>You enter the name, number, type, location, jurisdiction, declaration number and start time <b>once</b>. They print in every form header, every page footer, and the PDF filename.`},
+ {title:'2. Operational periods',t:()=>$('#perSel').closest('.blk'),text:`An incident is planned one <b>operational period</b> at a time. <b>+ Next period</b> copies the whole plan forward so you only change what changed. Approval is cleared and message logs (213, 213RR, 309) start empty.`},
+ {title:'3. Command structure and staffing',go:TG('f203'),t:()=>{const e=$('#main .pos.coml');return e&&e.parentElement},text:`Start with <b>ICS 203</b>. Mark each position <b>Filled</b>, <b>Not activated</b>, or <b>Needed - unfilled</b>, and add a name, agency and contact. The <b>COML</b> row is highlighted because the radio plan depends on whether a COML is in use.`},
+ {title:'4. Who to ask',go:TG('f205'),t:()=>$('#main .ask'),text:`Every form shows <b>who owns its information</b>, taken from your ICS 203 roster. Here the radio plan points to the COML. If that position is not filled, the banner turns amber and names the fallback (for example the Logistics Section Chief).`},
+ {title:'5. The IAP forms',go:TG('f202'),t:()=>$('#side [data-f=f202]'),text:`The sidebar lists the IAP forms: <b>202</b> objectives, <b>203</b> staffing, <b>204</b> assignment lists (as many as you need), <b>205/205A</b> communications, <b>206</b> medical, <b>207</b> the organization chart (built automatically from 203) and <b>208</b> safety. A green dot means a form has content.`},
+ {title:'6. Forms as needed',t:()=>byText('#side .lbl','As needed'),text:`Below the core forms, the <b>As needed</b> group holds ICS 213, 213RR, 215, 217A, 309 and image attachments. They appear only when you add them with the <b>+</b> button, and you can add as many of each as you need.`},
+ {title:'7. Autosave and approval',go:TG('f202'),t:()=>$('#main .top'),text:`Everything <b>autosaves</b> as you type. The top bar shows the incident, period times and status. <b>Mark approved</b> locks a period against edits; <b>Unlock</b> reopens it.`},
+ {title:'8. Radio channels',go:TG('f217a'),t:()=>{const e=byText('#main .cap','Channel templates');return e&&e.parentElement.querySelector('.row')},text:`ICS 217A has one-click <b>channel templates</b>: NIFOG channels (checked against NIFOG 2.02), the AWIN ABIT zones, and spare <b>exercise / training talkgroups</b>. <b>Copy these channels into ICS 205</b> sends them to the radio plan. Always verify frequencies against current sources before use.`},
+ {title:'9. Electronic signatures',go:TG('f202'),t:()=>$('#main .sigbox'),text:`Save a signature once (draw or type, with an optional PIN), then click <b>Sign</b> beside a signature field. Each signature is time-stamped. If the form is edited afterwards, the signature is flagged on screen and in print.`},
+ {title:'10. Cover image and library',go:TG('cover'),t:()=>$('#drop'),text:`Add a photo or an AI-generated image to the front of the IAP by choosing a file, dragging it in, or pasting. Tick <b>AI-generated</b> to print a label. The <b>Image library</b> holds reusable scenario photos and maps that can be a cover or a printed attachment page.`},
+ {title:'11. Preview and print',go:TG('f202',{preview:true}),t:()=>$('#main .alert'),text:`<b>Preview / Print IAP</b> assembles every form into one plan and checks for open items, such as missing objectives, no COML, or signatures edited after signing. <b>Print / Save as PDF</b> uses your browser. Exercise and training banners print automatically.`},
+ {title:'12. Back up your data',go:TG('f202'),t:()=>$('#side [data-act=export]'),text:`Your data stays <b>only in this browser</b>, and nothing is sent anywhere. Use <b>Export backup</b> regularly and before switching devices; <b>Import</b> restores it.`},
+ {title:'You are ready',text:`To start your own: <b>+ New</b> for a real event, or <b>Exercise</b> / <b>Training</b> for practice. You can replay this tour any time from <b>Guided tour</b> in the sidebar.`}
+];
+async function tourStart(){if(tour)return;
+ const had=S.incidents.some(i=>i.demo);const prevCur=S.cur;
+ tour={i:0,prevCur,created:!had};
+ if(had){const d=S.incidents.find(i=>i.demo);S.cur=d.id;d.pi=0}else await loadDemo();
+ const d=S.incidents.find(i=>i.demo);if(d){S.cur=d.id;d.pi=0}
+ $('#tour').hidden=false;tourShow()}
+function tourShow(){const s=TOUR[tour.i];if(s.go)s.go();
+ $('#tourStep').textContent='Step '+(tour.i+1)+' of '+TOUR.length;$('#tourTitle').textContent=s.title;$('#tourBody').innerHTML=s.text;
+ $('#tourBack').disabled=tour.i===0;$('#tourNext').textContent=tour.i===TOUR.length-1?'Finish':'Next';
+ requestAnimationFrame(()=>{let el=null;try{el=s.t?s.t():null}catch(e){}if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'});requestAnimationFrame(tourPos)});
+ $('#tourCard').focus()}
+function tourPos(){if(!tour)return;const s=TOUR[tour.i],card=$('#tourCard'),spot=$('#tourSpot'),shade=$('#tourShade');let el=null;try{el=s.t?s.t():null}catch(e){}
+ const r=el&&el.getBoundingClientRect?el.getBoundingClientRect():null,vw=innerWidth,vh=innerHeight,cw=card.offsetWidth,ch=card.offsetHeight;let x,y;
+ if(r&&r.width>0&&r.height>0){const pad=6;spot.style.display='block';spot.style.left=(r.left-pad)+'px';spot.style.top=(r.top-pad)+'px';spot.style.width=(r.width+pad*2)+'px';spot.style.height=(r.height+pad*2)+'px';shade.style.background='transparent';
+  const cands=vw<700?[[(vw-cw)/2,vh-ch-12],[(vw-cw)/2,12]]:[[r.right+20,r.top],[r.left-cw-20,r.top],[r.left,r.bottom+16],[r.left,r.top-ch-16]];
+  let best=null;for(const[cx,cy]of cands){const px=Math.min(Math.max(8,cx),vw-cw-8),py=Math.min(Math.max(8,cy),vh-ch-8);
+   const ox=Math.max(0,Math.min(px+cw,r.right+pad)-Math.max(px,r.left-pad)),oy=Math.max(0,Math.min(py+ch,r.bottom+pad)-Math.max(py,r.top-pad));
+   if(!best||ox*oy<best.ov)best={x:px,y:py,ov:ox*oy}}
+  x=best.x;y=best.y}
+ else{spot.style.display='none';shade.style.background='rgba(10,20,35,.62)';x=(vw-cw)/2;y=Math.max(12,(vh-ch)/2)}
+ card.style.left=Math.max(8,x)+'px';card.style.top=Math.max(8,y)+'px'}
+function tourStep(n){if(!tour)return;if(tour.i+n>=TOUR.length){tourEnd();return}tour.i=Math.max(0,tour.i+n);tourShow()}
+function tourEnd(){if(!tour)return;const t=tour;tour=null;$('#tour').hidden=true;
+ if(t.created){const di=S.incidents.find(i=>i.demo);if(di){const imgs=[di.cover&&di.cover.imgId,...di.periods.flatMap(p=>(p.d.fatt||[]).map(a=>a.img))];S.incidents=S.incidents.filter(x=>x!==di);S.lib=(S.lib||[]).filter(l=>{if(l.demo){imgs.push(l.imgId);return false}return true});S.sigs=(S.sigs||[]).filter(g=>!g.demo);imgs.forEach(gcImg)}}
+ S.cur=(S.incidents.find(i=>i.id===t.prevCur)||S.incidents[0]||{}).id||null;ui={form:'f202',inst:null,preview:false};
+ save();render();scrollTo(0,0);try{localStorage.setItem('iap-tour-done','1')}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-tour]');if(!b||!tour)return;const a=b.dataset.tour;if(a==='skip')tourEnd();else if(a==='back')tourStep(-1);else tourStep(1)});
+document.addEventListener('keydown',e=>{if(!tour)return;if(e.key==='Escape'){e.preventDefault();tourEnd()}else if(e.key==='ArrowRight'){e.preventDefault();tourStep(1)}else if(e.key==='ArrowLeft'){e.preventDefault();tourStep(-1)}
+ else if(e.key==='Tab'){const f=$$('#tourCard button:not([disabled])');if(!f.length)return;const i=f.indexOf(document.activeElement);e.preventDefault();f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus()}});
+addEventListener('resize',()=>tourPos());addEventListener('scroll',()=>tourPos(),true);
 const ACT={
+ tour(){return tourStart()},
  loadDemo(){return loadDemo()},
  newInc(el){const md=(el&&el.dataset&&el.dataset.mode)||'no',a=hourNow(),b=new Date(a.getTime()+12*36e5);
   ask(md==='training'?'New training incident':md==='exercise'?'New exercise incident':'New incident',[{k:'name',l:'Incident name',v:md==='training'?'TRAINING - ':md==='exercise'?'EXERCISE - ':''},{k:'number',l:'Incident number (optional)'},{k:'type',l:'Incident type'},{k:'location',l:'Location'},{k:'jurisdiction',l:'Jurisdiction / agency'},{k:'declaration',l:'Declaration / disaster # (optional)'},{k:'started',l:'Incident began (date/time)',t:'datetime-local',v:toLocal(new Date())},{k:'exercise',l:'Real event, exercise, or training?',t:'select',v:md,o:[['no','Real event'],['exercise','EXERCISE (prints an EXERCISE banner on every page)'],['training','TRAINING (prints a TRAINING banner on every page)']]},{k:'exerciseName',l:'Exercise / training name (optional, e.g. "2026 Statewide Functional Exercise")'},{k:'from',l:'Operational period 1 - from',t:'datetime-local',v:toLocal(a)},{k:'to',l:'to',t:'datetime-local',v:toLocal(b)}],o=>{
@@ -818,10 +877,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&e.target.
 if(!curInc())S.cur=S.incidents[0]&&S.incidents[0].id;
 render();
 /* "?demo=1" link: open the demo incident (reuse it if already loaded) */
-try{if(new URLSearchParams(location.search).get('demo')==='1'){
- const ex=S.incidents.find(i=>i.demo);
- if(ex){S.cur=ex.id;ui={form:'f202',inst:null,preview:true};save();render()}else loadDemo();
- if(history.replaceState)history.replaceState(null,'',location.pathname)}}catch(e){}
+try{const q=new URLSearchParams(location.search);
+ if(q.get('demo')==='1'){
+  const ex=S.incidents.find(i=>i.demo);
+  if(ex){S.cur=ex.id;ui={form:'f202',inst:null,preview:true};save();render()}else loadDemo();
+  if(history.replaceState)history.replaceState(null,'',location.pathname)}
+ else if(q.get('tour')==='1'){tourStart();if(history.replaceState)history.replaceState(null,'',location.pathname)}}catch(e){}
 </script>
 </body>
 </html>
